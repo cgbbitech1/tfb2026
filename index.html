@@ -1,0 +1,2079 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@100..900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161b; --panel:#1b2027; --panel2:#242a33; --line:#2e353f;
+    --ink:#e8f1f5; --mute:#5a7585;
+    --safe:#3ad6c5; --warn:#f0b44a; --gone:#ff6b6b; --acc:#3ad6c5; --rival:#ff8fb8;
+    --display:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --r:20px; --shadow:0 14px 34px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+       -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45}
+  html,body{height:100%;overflow:hidden}
+  .wrap{max-width:1500px;margin:0 auto;padding:10px 12px 0;height:100vh;
+        display:flex;flex-direction:column;overflow:hidden}
+  .cols{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:12px;
+        flex:1 1 auto;min-height:0;overflow:hidden;padding-bottom:10px}
+  .col{overflow-y:auto;overflow-x:hidden;padding-right:7px;scrollbar-width:thin;
+       scrollbar-color:#2e353f transparent}
+  .col::-webkit-scrollbar{width:8px}
+  .col::-webkit-scrollbar-thumb{background:#2e353f;border-radius:4px}
+  .col::-webkit-scrollbar-track{background:transparent}
+  .colhead{position:sticky;top:0;z-index:5;background:var(--bg);padding:2px 0 8px;
+           display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .colhead h2{margin:0}
+  .colhead .cnt{font-family:var(--mono);font-size:11px;color:var(--mute)}
+  /* roster slots */
+  .slot{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center;
+        border:1px solid var(--line);border-radius:7px;background:var(--panel);
+        padding:7px 10px;margin-bottom:6px}
+  .slot.open{border-style:dashed;background:transparent;opacity:.6}
+  .slot.bench{background:var(--panel2)}
+  .slotlab{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.09em;
+           color:var(--mute);text-transform:uppercase}
+  .slotnm{font-family:var(--display);font-size:15px;font-weight:500;line-height:1.15}
+  .slotpick{font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+  /* tabs */
+  .tabs{display:flex;gap:4px}
+  .tab{font-family:var(--display);font-size:11.5px;font-weight:500;letter-spacing:.14em;
+       text-transform:uppercase;color:var(--mute);background:transparent;border:1px solid transparent;
+       border-radius:6px;padding:5px 10px;cursor:pointer;width:auto}
+  .tab:hover{color:var(--ink);background:var(--panel2)}
+  .tab.on{color:var(--ink);background:var(--panel2);border-color:var(--line)}
+  .tab.on::after{content:'';display:block;height:2px;background:var(--acc);
+        border-radius:2px;margin:4px -4px -3px}
+  /* ECR rows */
+  .ecr{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;
+       border:1px solid var(--line);border-left:3px solid transparent;border-radius:7px;
+       background:var(--panel);padding:6px 9px;margin-bottom:5px;cursor:pointer}
+  .ecr:hover{background:var(--panel2)}
+  .ecr.q{border-left-color:var(--acc);background:linear-gradient(90deg,#141F33,var(--panel) 60%)}
+  .ecr .rk{font-family:var(--display);font-size:16px;font-weight:600;color:var(--mute);text-align:right}
+  .ecr.q .rk{color:var(--acc)}
+  .ecr .en{font-family:var(--display);font-size:14.5px;font-weight:500;line-height:1.15}
+  .ecr .em{font-family:var(--mono);font-size:10px;color:var(--mute);margin-top:2px}
+  .ecr .ep{font-family:var(--display);font-size:15px;font-weight:600;text-align:right}
+  .donut{display:block;width:46px;height:46px}
+  .donut .dv{font-family:var(--display);font-size:13px;font-weight:700;fill:#fff}
+  .donut .du{font-size:7.5px;font-weight:600}
+  .star{color:var(--acc);font-size:11px;margin-left:5px}
+  /* draft grid */
+  .gridwrap{position:relative;overflow:auto;max-height:calc(100vh - 300px);
+            scrollbar-width:thin;scrollbar-color:#2e353f transparent}
+  .gridwrap::-webkit-scrollbar{width:8px;height:8px}
+  .gridwrap::-webkit-scrollbar-thumb{background:#22404e;border-radius:4px}
+  .dgrid{display:grid;gap:3px;min-width:max-content}
+  .gh{position:sticky;top:0;z-index:3;background:var(--bg);
+      font-family:var(--mono);font-size:9.5px;color:var(--mute);text-align:center;padding:3px 0}
+  .gh.corner{left:0;z-index:6}
+  .gh.me{color:var(--warn);font-weight:600}
+  .gh.riv{color:var(--rival);font-weight:600}
+  .gc{background:var(--panel2);border:1px solid var(--line);border-radius:4px;
+      padding:4px 5px;min-height:32px;width:74px;overflow:hidden;border-left-width:3px}
+  .gc.empty{background:transparent;border-style:dashed;opacity:.35}
+  .gc.me{border-color:var(--warn);background:#2A2113}
+  .gc.riv{border-color:#5A2C48}
+  .gc.tgt{box-shadow:inset 0 0 0 1px var(--warn)}
+  .gc.now{border-color:var(--warn);box-shadow:0 0 0 2px rgba(255,176,32,.35);opacity:1}
+  .gc.pos-QB{border-left-color:#FF5C5C}
+  .gc.pos-RB{border-left-color:#3DD68C}
+  .gc.pos-WR{border-left-color:#4D8DFF}
+  .gc.pos-TE{border-left-color:#FF9430}
+  .gc.pos-QB .gp{color:#FF5C5C}
+  .gc.pos-RB .gp{color:#3DD68C}
+  .gc.pos-WR .gp{color:#4D8DFF}
+  .gc.pos-TE .gp{color:#FF9430}
+  .gc .gn{font-size:10px;font-weight:600;line-height:1.2;white-space:nowrap;
+          overflow:hidden;text-overflow:ellipsis}
+  .gc .gp{font-family:var(--mono);font-size:8.5px;color:var(--mute)}
+  .gc.empty .gp{font-size:10px;font-weight:600;color:var(--ink)}
+  .rlab{position:sticky;left:0;z-index:4;background:var(--bg);
+        font-family:var(--mono);font-size:9.5px;color:var(--mute);
+        display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
+  .rlab.now{color:var(--warn);font-weight:600}
+  .rlab.mine{color:var(--warn)}
+  .gbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .gbar>div{display:flex;align-items:center;gap:6px}
+  .follow{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border-radius:6px;
+          border:1px solid var(--line);background:var(--panel2);cursor:pointer;width:auto}
+  .follow.on{border-color:var(--acc);color:#BAD1FF;background:#1B3557}
+  @media(max-width:900px){
+    html,body{overflow:hidden}
+    .wrap{height:100dvh;overflow:hidden;padding:8px 0 0}
+    .rail{margin:0 10px 10px;padding:8px 0 10px}
+    /* one screen-wide page per column, swiped horizontally */
+    .cols{display:flex;grid-template-columns:none;gap:0;overflow-x:auto;overflow-y:hidden;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+      padding-bottom:0}
+    .cols::-webkit-scrollbar{display:none}
+    .col{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;
+      overflow-y:auto;overflow-x:hidden;max-height:none;padding:0 10px 8px;min-width:0}
+    body.wideboard #colM{display:flex}      /* widen is meaningless on one column */
+    .colhead{position:sticky;top:0}
+    /* page dots */
+    .pager{display:flex;justify-content:center;gap:7px;padding:8px 0 10px;flex:0 0 auto}
+    .pager i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block;
+      transition:background .2s,transform .2s}
+    .pager i.on{background:var(--acc);transform:scale(1.35)}
+    .gridwrap{max-height:none}
+    .qs .gauge{width:64px;height:46px}
+    #ltabs,#subtabs{width:100%;overflow-x:auto;scrollbar-width:none}
+    #ltabs::-webkit-scrollbar,#subtabs::-webkit-scrollbar{display:none}
+    .syncpop{width:min(330px,86vw)}
+  }
+  .pager{display:none}
+  .rail{position:sticky;top:0;z-index:30;background:transparent;
+        padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:16px}
+  .railgrid{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+  .onclock{font-family:var(--display);font-size:32px;font-weight:600;line-height:1}
+  .onclock small,.until small{display:block;font-family:var(--body);font-size:9.5px;font-weight:600;
+        letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+  .untilwrap{text-align:right}
+  .until{font-family:var(--display);font-size:32px;font-weight:600;line-height:1;color:var(--acc)}
+  .livedot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gone);margin-right:6px}
+  .livedot.on{background:var(--safe);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .status{font-size:11px;color:var(--mute)}
+  .track{display:flex;gap:2px;height:16px;align-items:flex-end;margin-top:10px}
+  .tick{flex:1;background:var(--line);border-radius:1px;height:6px;transition:all .3s}
+  .tick.done{background:#2E4257;height:4px}
+  .tick.mine{background:var(--warn);height:16px;box-shadow:0 0 9px rgba(240,180,74,.5)}
+  .tick.rival{background:var(--rival);height:11px}
+  .tick.now{background:var(--warn);height:16px;box-shadow:0 0 9px rgba(255,176,32,.55)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  h2{font-family:var(--display);font-weight:500;font-size:12.5px;letter-spacing:.2em;
+     text-transform:uppercase;color:var(--mute);margin:0 0 11px}
+  details>summary{cursor:pointer;list-style:none;font-family:var(--display);font-size:12.5px;
+     letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+  details>summary::-webkit-details-marker{display:none}
+  details>summary::before{content:'+ ';color:var(--acc)}
+  details[open]>summary::before{content:'– ';color:var(--acc)}
+  label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--mute);margin:0 0 4px}
+  input,textarea,select,button{font-family:var(--body);font-size:14px;color:var(--ink);
+        background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:9px 10px;width:100%}
+  textarea{font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:vertical}
+  input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+  button{cursor:pointer;font-weight:600;width:auto}
+  button:hover{background:#26364A}
+  .btn-go{background:var(--acc);border-color:var(--acc);color:#08101C}
+  .btn-go:hover{background:#7BA3FF}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
+  .row>div{flex:1;min-width:108px}
+  .hint{font-size:12px;color:var(--mute);margin:6px 0 0}
+  /* intel strip */
+  .intel{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px}
+  .ibox{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+  .ibox .n{font-family:var(--display);font-size:25px;font-weight:600;line-height:1.05}
+  .ibox .l{font-size:9.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+  .ibox .s{font-size:11px;color:var(--mute);margin-top:3px}
+  /* rivals */
+  .rv{border:1px solid var(--line);border-left:3px solid var(--rival);border-radius:8px;
+      background:var(--panel2);padding:10px 12px;margin-bottom:8px}
+  .rvh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .rvname{font-family:var(--display);font-size:16px;font-weight:500}
+  .chip.pre{border-color:var(--warn);color:#FFD48A;background:#2C2213}
+  .chip.pre b{color:#C9A15E!important}
+  .rvroster{font-family:var(--mono);font-size:11.5px;color:var(--mute);margin-top:7px}
+  .want{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.09em;padding:2px 7px;
+        border-radius:4px;margin-right:5px;background:#4A1F3A;color:#FFA8DC}
+  /* players */
+  .plyr{border:1px solid var(--line);border-radius:9px;background:var(--panel);
+        padding:11px 13px;margin-bottom:8px}
+  .plyr.out{opacity:.32}
+  .plyr.urgent{border-color:#7A4A1A;background:linear-gradient(90deg,#231A10,var(--panel) 55%)}
+  .ptop{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .nm{font-family:var(--display);font-size:19px;font-weight:500;line-height:1.12}
+  .meta{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:3px}
+  .pos{display:inline-block;font-family:var(--body);font-size:9px;font-weight:700;letter-spacing:.09em;
+       padding:2px 6px;border-radius:4px;margin-right:7px}
+  .QB{background:#3B2A52;color:#C4A2F0}.RB{background:#123E36;color:#5FE0C4}
+  .WR{background:#13324F;color:#7FB6F5}.TE{background:#4A3418;color:#F2B15E}
+  .K,.DEF{background:#333F4C;color:#A9BCCF}
+  .bignum{font-family:var(--display);font-size:38px;font-weight:600;line-height:.9;text-align:right}
+  .bignum span{font-size:16px;font-weight:400;opacity:.6}
+  .blabel{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+          color:var(--mute);text-align:right;margin-top:3px}
+  .delta{font-family:var(--mono);font-size:10.5px;text-align:right;margin-top:2px}
+  /* radial gauge (replaces the big % readout) */
+  .gauge{display:block;width:124px;height:86px;margin-left:auto}
+  .gauge .gv{font-family:var(--display);font-weight:600;font-size:26px}
+  .gauge .gu{font-family:var(--display);font-weight:400;font-size:12px;opacity:.6}
+  .bar{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden;margin:10px 0 9px}
+  .bar i{display:block;height:100%;border-radius:2px;transition:width .5s ease}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:10.5px;padding:3px 7px;border-radius:5px;
+        background:var(--panel2);border:1px solid var(--line);white-space:nowrap}
+  .verdict{font-size:11.5px;color:var(--mute);margin-top:9px;font-style:italic}
+  .empty{text-align:center;padding:32px 16px;color:var(--mute)}
+  .tickerline{font-family:var(--mono);font-size:11.5px;color:var(--mute);padding:3px 0;
+              border-bottom:1px solid rgba(38,55,76,.5)}
+  .tickerline b{color:var(--ink);font-weight:600}
+  .tickerline em{color:var(--rival);font-style:normal}
+  .err{background:#3A1A20;border:1px solid #6B2C33;color:#FFB3B8;font-size:12.5px;padding:9px 11px;border-radius:7px;margin-top:9px}
+  .ok{background:#12332C;border:1px solid #235E51;color:#7FE8D2;font-size:12.5px;padding:9px 11px;border-radius:7px;margin-top:9px}
+  .slider{display:flex;align-items:center;gap:9px}
+  .slider input[type=range]{padding:0;background:none;border:none;flex:1}
+  .slider output{font-family:var(--mono);font-size:12px;color:var(--acc);min-width:32px;text-align:right}
+  @media(max-width:560px){.onclock,.until{font-size:25px}.bignum{font-size:32px}.nm{font-size:17px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== pull-to-refresh visual language ===== */
+  .card,.plyr,.rv,.slot,.ecr,.ibox,.gc,.chip,.follow,
+  input,textarea,select,button{border-radius:var(--r)}
+  .card,.plyr,.rv{box-shadow:var(--shadow);border-color:transparent;background:var(--panel)}
+  .card{padding:16px}
+  .plyr{padding:14px 16px}
+  .slot,.ecr{border-radius:14px;border-color:transparent;background:var(--panel);box-shadow:0 6px 16px rgba(0,0,0,.22)}
+  .slot.open{box-shadow:none;border:1px dashed var(--line);background:transparent}
+  .ecr{border-left:3px solid transparent}
+  .ecr:hover{background:var(--panel2)}
+  .ecr.q{background:var(--panel);border-left-color:transparent}
+  .ecr.q .en,.ecr.q .rk{color:inherit}
+  .star{color:var(--warn);font-size:12px;margin-left:5px}
+  .ibox{border-radius:14px;border-color:transparent;background:var(--panel2)}
+  .chip,.follow{border-radius:999px;border-color:transparent;background:var(--panel2)}
+  .gc{border-radius:8px;border-color:transparent;background:var(--panel2)}
+  .gc.empty{background:transparent;border:1px dashed var(--line)}
+  .bar{background:var(--panel2)}
+  .bar i,.row{border-radius:7px}
+  h2,.colhead h2,.blabel,.ibox .l,label,.tab,details>summary,.slotlab{
+    letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}
+  h2,.colhead h2{font-size:9.5px;letter-spacing:.1em}
+  .nm,.slotnm,.ecr .en,.rvname{font-weight:600;letter-spacing:-.01em}
+  .onclock,.until,.ibox .n,.bignum{font-weight:700;letter-spacing:-.02em}
+  .tab{border-radius:999px}
+  .tab.on{background:var(--panel2);border-color:transparent}
+  .tab.on::after{background:var(--acc)}
+  .btn-go{color:#0f1a24}
+  .btn-go:hover{background:#5fe6d7}
+  button:hover{background:var(--panel2)}
+  .tick.mine{box-shadow:0 0 9px rgba(240,180,74,.5)}
+  .gc.me{background:var(--panel2);box-shadow:inset 0 0 0 1px var(--warn)}
+  .gc.riv{box-shadow:inset 0 0 0 1px var(--rival)}
+  .gc.now{box-shadow:0 0 0 2px rgba(240,180,74,.4)}
+  .plyr.urgent{background:var(--panel);box-shadow:var(--shadow),inset 0 0 0 1px rgba(240,180,74,.45)}
+  .plyr.out{opacity:.28;box-shadow:none}
+
+  /* ===== queue-pick success flash ===== */
+  #fx{position:fixed;inset:0;z-index:200;display:none;place-items:center;
+      background:rgba(15,26,36,.72);backdrop-filter:blur(2px);pointer-events:none}
+  #fx.on{display:grid}
+  #fxsvg{width:min(46vmin,300px);height:min(46vmin,300px);display:block;margin:0 auto}
+  #fx .ring{fill:none;stroke:var(--safe);stroke-width:6;stroke-linecap:round;transform-origin:120px 120px}
+  #fx .halo{fill:none;stroke:var(--safe);stroke-width:2;opacity:0;transform-origin:120px 120px}
+  #fx .tick{fill:none;stroke:#eafff5;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+  #fx .core{fill:#0e1a16}
+  #fxname{margin-top:14px;text-align:center;font-family:var(--display);font-size:22px;font-weight:700;
+          letter-spacing:-.02em;color:var(--ink)}
+  #fxname small{display:block;font-size:9.5px;font-weight:600;letter-spacing:.14em;
+          text-transform:uppercase;color:var(--safe);margin-bottom:5px}
+
+  /* ===== middle column: FLIP-list styling ===== */
+  #myteam .slot{display:flex;align-items:center;gap:0;min-height:44px;padding:0;
+    margin:0 0 6px;border:1px solid #1b2230;background:#11151d;border-radius:7px;
+    overflow:hidden;box-shadow:none;font-family:var(--mono);
+    transition:box-shadow .18s ease,transform .18s ease}
+  #myteam .slot:hover{box-shadow:0 14px 30px -8px rgba(0,0,0,.7),0 0 0 1px var(--acc);
+    transform:translateY(-1px)}
+  #myteam .slot.open{border:1px solid #1b2230;background:#0f131a;opacity:1}
+  #myteam .slot.open:hover{box-shadow:none;transform:none}
+  #myteam .sbar{width:5px;align-self:stretch;flex:0 0 5px;background:#2b3545}
+  #myteam .slot .snum{position:relative}
+  #myteam .snum{flex:0 0 40px;align-self:stretch;display:flex;align-items:center;justify-content:center;
+    font:700 11px/1 var(--mono);letter-spacing:.02em;color:#0c0e13;background:var(--acc)}
+  #myteam .slot.open .snum{background:#2b3545;color:#5b6573}
+  #myteam .slot.bench.open .snum{background:#2b3545;color:#5b6573}
+  #myteam .sbody{flex:1 1 auto;min-width:0;padding:0 12px;display:flex;flex-direction:column;gap:3px}
+  #myteam .slotnm{font-family:var(--body);font-size:14px;font-weight:600;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #myteam .slotpick{font-family:var(--mono);font-size:10px;color:#5b6573;margin:0}
+  #myteam .sk{display:flex;flex-direction:column;gap:5px}
+  #myteam .sk i{display:block;height:7px;border-radius:3px;background:#2b3545}
+  #myteam .sk i+i{height:5px;background:#1d2433}
+  #myteam .sdot{flex:0 0 auto;width:26px;padding-right:10px;display:flex;flex-direction:column;
+    gap:3px;align-items:center;justify-content:center}
+  #myteam .sdot i{width:3px;height:3px;border-radius:50%;background:#5b6573;display:block}
+  #myteam .slot.open .sdot i{opacity:.4}
+
+  /* ===== slot stepper + pick clock ===== */
+  .steprow{display:flex;align-items:center;gap:0;margin-top:12px}
+  .stepnode{position:relative;flex:0 0 auto;width:clamp(22px,2.4vw,30px);height:clamp(22px,2.4vw,30px);
+    border-radius:50%;display:grid;place-items:center;background:#1b1f2b;
+    box-shadow:inset 0 0 0 2px #2a3042;transform:scale(.86);
+    transition:transform .45s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,background .3s;
+    font:700 11px/1 var(--mono);color:#5a6075;cursor:default}
+  .stepnode.done{background:var(--acc);color:#0b0d12;transform:scale(1);
+    box-shadow:inset 0 0 0 2px var(--acc),0 0 0 5px rgba(58,214,197,.13)}
+  .stepnode.now{transform:scale(1.12);color:var(--ink);background:#2a1f0e;
+    box-shadow:inset 0 0 0 2px var(--warn),0 0 0 6px rgba(240,180,74,.18);
+    animation:nowpulse 1.6s ease-in-out infinite}
+  @keyframes nowpulse{0%,100%{box-shadow:inset 0 0 0 2px var(--warn),0 0 0 6px rgba(240,180,74,.18)}
+    50%{box-shadow:inset 0 0 0 2px var(--warn),0 0 0 11px rgba(240,180,74,.03)}}
+  .stepnode.me{box-shadow:inset 0 0 0 2px var(--warn),0 0 0 5px rgba(240,180,74,.15);color:var(--warn)}
+  .stepnode.me.done{background:var(--warn);color:#0b0d12}
+  .stepnode.me.now{box-shadow:inset 0 0 0 2px var(--warn),0 0 0 6px rgba(240,180,74,.22)}
+  .stepseg{flex:1 1 auto;min-width:6px;height:4px;border-radius:2px;background:#1b1f2b;
+    overflow:hidden;position:relative}
+  .stepseg i{position:absolute;inset:0;border-radius:2px;transform-origin:left center;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--acc),#22d3a6);transition:transform .5s cubic-bezier(.65,0,.35,1)}
+  .stepseg.rtl i{transform-origin:right center}
+  .dirbar{display:flex;align-items:center;justify-content:space-between;margin-top:7px;
+    font:600 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .dirbar .arrow{color:var(--acc);letter-spacing:.24em}
+  /* pick clock */
+  .clockwrap{text-align:center}
+  .pclock{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;
+    letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .pclock.warn{color:var(--warn)}
+  .pclock.over{color:var(--gone)}
+  .pclock.idle{color:var(--mute);opacity:.55}
+  .plimit{font-family:var(--mono);font-size:10px;color:var(--mute);background:var(--panel2);
+    border:none;border-radius:999px;padding:2px 6px;width:auto;margin-top:5px;cursor:pointer}
+
+  /* ===== 15-second warning: kinetic weight-morph wave ===== */
+  #wm{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;
+      background:rgba(13,27,42,.86);backdrop-filter:blur(3px);pointer-events:none}
+  #wm.on{display:flex}
+  #wmin{text-align:center}
+  #wmword{display:flex;justify-content:center;line-height:.9;letter-spacing:-.02em}
+  #wmword span{display:inline-block;color:#e0fbfc;font-size:clamp(38px,13vw,120px);font-weight:700;
+    font-family:"Helvetica Neue",Arial,sans-serif;transform-origin:center bottom;transition:none;
+    text-shadow:0 0 24px rgba(120,200,255,.25)}
+  #wmsub{margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--warn)}
+
+  #syncBtn{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  #syncBtn.live{border-color:transparent;background:#12332C;color:var(--safe);
+    box-shadow:inset 0 0 0 1px var(--safe)}
+
+  /* ===== expand-board toggle (hamburger morph) ===== */
+  .morph{position:relative;width:30px;height:30px;flex:0 0 30px;padding:0;
+    border:1px solid rgba(255,255,255,.07);border-radius:10px;background:var(--panel2);
+    cursor:pointer;transition:border-color .28s cubic-bezier(.22,1,.36,1),
+                              box-shadow .28s cubic-bezier(.22,1,.36,1)}
+  .morph:hover{border-color:rgba(255,255,255,.12)}
+  .morph.on{border-color:rgba(58,214,197,.45);
+    box-shadow:0 0 0 1px rgba(58,214,197,.45),0 8px 40px -8px rgba(58,214,197,.45)}
+  .morph i{position:absolute;left:50%;top:50%;width:15px;height:2px;border-radius:2px;
+    background:var(--ink);transform:translate(-50%,-50%);
+    transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .16s cubic-bezier(.22,1,.36,1),background .28s}
+  .morph i:nth-child(1){transform:translate(-50%,-5px)}
+  .morph i:nth-child(3){transform:translate(-50%,3px)}
+  .morph.on i{background:var(--acc)}
+  .morph.on i:nth-child(1){transform:translate(-50%,-50%) rotate(45deg)}
+  .morph.on i:nth-child(2){opacity:0;transform:translate(-50%,-50%) scaleX(.3)}
+  .morph.on i:nth-child(3){transform:translate(-50%,-50%) rotate(-45deg)}
+  /* widened board: the roster column steps aside */
+  body.wideboard #colM{display:none}
+  body.wideboard .cols{grid-template-columns:1.15fr 2.1fr}
+  body.wideboard .gridwrap{overflow-x:hidden}
+  body.wideboard .dgrid{min-width:0;width:100%}
+  body.wideboard .gc{width:auto;min-width:0}
+  body.wideboard .gc .gn{font-size:9.5px}
+  body.wideboard .gc .gp{font-size:8px}
+  body.wideboard .gc.empty .gp{font-size:9.5px}
+  /* wide mode: the column itself never scrolls — only the grid does */
+  body.wideboard #colR{overflow:hidden;display:flex;flex-direction:column;padding-right:0}
+  body.wideboard #colR .colhead{flex:0 0 auto}
+  body.wideboard #paneBoard{flex:1 1 auto;min-height:0;display:flex}
+  body.wideboard #paneBoard>.card{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+    margin-bottom:0}
+  body.wideboard #paneBoard .gbar{flex:0 0 auto}
+  body.wideboard .gridwrap{flex:1 1 auto;min-height:0;max-height:none}
+  body.wideboard #paneBoard>.card>.hint{display:none}
+  @media (prefers-reduced-motion:reduce){.morph,.morph i{transition-duration:.001ms}}
+
+  /* ===== morphing blob tabs ===== */
+  .tabs{position:relative;display:flex;gap:0;padding:4px;border-radius:16px;
+    background:var(--panel2);border:1px solid rgba(255,255,255,.07);
+    box-shadow:0 18px 50px -24px rgba(0,0,0,.9)}
+  .tabs .blob{position:absolute;top:4px;left:4px;height:calc(100% - 8px);width:0;
+    border-radius:12px;background:linear-gradient(120deg,#7A1220,#A81E2C);
+    box-shadow:0 0 32px -6px rgba(168,30,44,.5);z-index:0;opacity:0;
+    transition:transform 520ms cubic-bezier(.34,1.56,.64,1),
+               width 520ms cubic-bezier(.34,1.56,.64,1),opacity .2s}
+  .tabs .tab{position:relative;z-index:1;background:transparent;border:1px solid transparent;
+    border-radius:12px;padding:6px 13px;color:var(--mute);
+    transition:color .28s,transform .28s cubic-bezier(.34,1.56,.64,1)}
+  .tabs .tab:hover{background:transparent;color:var(--ink)}
+  .tabs .tab.on{color:#FFE9EC;background:transparent;border-color:transparent;transform:translateY(-1px)}
+  .tabs .tab.on::after{display:none}
+  @media (prefers-reduced-motion:reduce){.tabs .blob,.tabs .tab{transition-duration:.001ms}}
+
+  /* ===== best-available position sub-tabs ===== */
+  #subtabs{margin:0 0 9px;width:max-content}
+  #subtabs .tab{padding:5px 13px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em}
+  .subtabs{display:flex;gap:5px;margin:0 0 8px;flex-wrap:wrap}
+  .subtab{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    padding:4px 11px;border-radius:999px;border:1px solid transparent;background:var(--panel2);
+    color:var(--mute);cursor:pointer;width:auto;transition:color .2s,background .2s,box-shadow .2s}
+  .subtab:hover{color:var(--ink);background:var(--panel2)}
+  .subtab.on{color:#0b1016;background:var(--acc);font-weight:700}
+  .subtab.on[data-p="QB"]{background:#FF5C5C}
+  .subtab.on[data-p="RB"]{background:#3DD68C}
+  .subtab.on[data-p="WR"]{background:#4D8DFF}
+  .subtab.on[data-p="TE"]{background:#FF9430}
+
+  /* ===== quick sheet ===== */
+  .qs .qsx2{grid-column:1 / -1;margin-top:2px}
+  .qs .qsx2 .chips{margin-bottom:5px}
+  .qs .qsx2 .verdict{margin-top:5px}
+  .qs.urgent{box-shadow:0 6px 16px rgba(0,0,0,.22),inset 0 0 0 1px rgba(240,180,74,.45)}
+  .qs{display:grid;grid-template-columns:26px 1fr auto auto;gap:9px;align-items:center;
+    border-radius:14px;background:var(--panel);padding:8px 11px;margin-bottom:6px;
+    box-shadow:0 6px 16px rgba(0,0,0,.22)}
+  .qs.out{opacity:.3}
+  .qs .qrk{font-family:var(--display);font-size:15px;font-weight:700;color:var(--mute);text-align:right}
+  .qs .qn .star{margin:0 6px 0 0}
+  .qs.out .qn .star{color:var(--mute)}
+  .qs .qn{font-family:var(--body);font-size:14.5px;font-weight:600;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qs .qm{font-family:var(--mono);font-size:10px;color:var(--mute);margin-top:2px}
+  .qs .gauge{width:74px;height:52px;margin:0}
+  .qs .gv{font-size:30px}
+  .qs .gu{font-size:14px}
+  .qsx{font-family:var(--mono);font-size:14px;line-height:1;color:var(--mute);background:transparent;
+    border:none;padding:4px 6px;cursor:pointer;width:auto;border-radius:8px}
+  .qsx:hover{color:var(--gone);background:var(--panel2)}
+
+  /* ===== sync popover in the rail ===== */
+  .untilwrap{position:relative}
+  .syncpop{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:330px;
+    text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    padding:14px;box-shadow:var(--shadow)}
+  .syncpop.on{display:block}
+
+  /* ===== sleeper adp pane ===== */
+  h2.hltitle,.colhead h2.hltitle{font-size:30px;font-weight:800;letter-spacing:.01em;line-height:1.15;
+    text-transform:none;color:var(--ink)}
+  .slotsec{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  #hltabs{margin:2px 0 10px}
+  #ltabs{margin:0 0 8px;width:max-content}
+  #ltabs .tab{padding:5px 13px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em}
+  .adpnote{font-family:var(--mono);font-size:10px;color:var(--mute);margin:0 0 8px;line-height:1.5}
+  .adpr{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;
+    padding:7px 11px;border-radius:12px;background:var(--panel);margin-bottom:5px;cursor:pointer}
+  .adpr:hover{background:var(--panel2)}
+  .adpr .ar{font-family:var(--display);font-size:14px;font-weight:700;color:var(--mute);text-align:right}
+  .adpr .an{font-family:var(--body);font-size:14px;font-weight:600;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .adpr .am{font-family:var(--mono);font-size:10px;color:var(--mute);margin-top:2px}
+  .adpr .ad{font-family:var(--mono);font-size:11px;font-weight:700;text-align:right}
+  /* ---- splash gate ---- */
+  #splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;
+    background:var(--bg);
+    background-image:radial-gradient(60vw 40vw at 50% 0%,rgba(255,77,77,.16),transparent 60%);
+    transition:opacity .35s cubic-bezier(0.22,1,0.36,1)}
+  #splash.gone{opacity:0;pointer-events:none}
+  .jel{border:0;cursor:pointer;padding:17px 36px;font-family:var(--display);
+    font-size:clamp(15px,4.5vw,18px);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:#0b0c12;background:linear-gradient(135deg,#ff4d4d 0%,#ff2d55 55%,#ff8a3d 100%);
+    border-radius:14px;box-shadow:0 10px 28px -10px rgba(255,77,77,.65);
+    transition:transform 160ms cubic-bezier(0.22,1,0.36,1);will-change:transform}
+  .jel:hover{transform:scale(1.04)}
+  .jel.is-squish{animation:jel-squish .5s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes jel-squish{
+    0%{transform:scale(1.04,1.04)} 30%{transform:scale(1.18,.78)}
+    55%{transform:scale(.88,1.14)} 75%{transform:scale(1.06,.96)} 100%{transform:scale(1,1)}}
+  body.gated .wrap{visibility:hidden}
+  /* ---- fruit loader ---- */
+  #splash .stage{display:grid;place-items:center;gap:18px}
+  #loader{display:none}
+  #splash.loading #enterBtn{display:none}
+  #splash.loading #loader{display:grid;place-items:center;gap:14px}
+  .c14-orange{width:120px;height:120px;position:relative;animation:c14-spin 8s linear infinite;
+    --peel:#ff4d4d;--seg1:#8f2b2b;--seg2:#ff4d4d;transition:none}
+  .c14-peel{fill:none;stroke:var(--peel);stroke-width:4;filter:drop-shadow(0 0 5px currentColor)}
+  .c14-segment{fill:var(--seg1);opacity:.15;transform-origin:60px 60px;
+    animation:c14-pulse 1.6s ease-in-out infinite}
+  .c14-segment:nth-child(3){transform:rotate(0deg);animation-delay:0s}
+  .c14-segment:nth-child(4){transform:rotate(45deg);animation-delay:.2s}
+  .c14-segment:nth-child(5){transform:rotate(90deg);animation-delay:.4s}
+  .c14-segment:nth-child(6){transform:rotate(135deg);animation-delay:.6s}
+  .c14-segment:nth-child(7){transform:rotate(180deg);animation-delay:.8s}
+  .c14-segment:nth-child(8){transform:rotate(225deg);animation-delay:1s}
+  .c14-segment:nth-child(9){transform:rotate(270deg);animation-delay:1.2s}
+  .c14-segment:nth-child(10){transform:rotate(315deg);animation-delay:1.4s}
+  @keyframes c14-spin{to{transform:rotate(360deg)}}
+  @keyframes c14-pulse{0%,100%{opacity:.15;fill:var(--seg1)}50%{opacity:1;fill:var(--seg2)}}
+  #loadlab{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--peel,#ff4d4d);opacity:.7}
+  @media (prefers-reduced-motion:reduce){.c14-orange,.c14-segment{animation:none!important}
+    .c14-segment{opacity:.8}}
+  @media (prefers-reduced-motion:reduce){.jel.is-squish{animation:none}.jel{transition-duration:.001ms}}
+  /* ---- league title ---- */
+  .tfb{font-family:var(--display);text-align:center;line-height:1.15}
+  .tfb .t1{display:block;font-weight:700;text-transform:uppercase;color:#ff4d4d;
+    letter-spacing:.34em;text-indent:.34em}
+  .tfb .t2{display:block;font-weight:600;color:var(--ink);letter-spacing:.05em;
+    margin-top:3px;opacity:.95}
+  #splashTitle{position:absolute;top:max(18px,4vh);left:0;right:0;padding:0 16px}
+  #splashTitle .t1{font-size:clamp(11px,3vw,14px)}
+  #splashTitle .t2{font-size:clamp(16px,5vw,26px)}
+  #pageTitle{padding:1px 0 7px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  #pageTitle .t1{font-size:clamp(9px,1.1vw,11px);letter-spacing:.3em;text-indent:.3em}
+  #pageTitle .t2{font-size:clamp(13px,1.9vw,18px);margin-top:1px}
+  /* ---- starfield backdrop ---- */
+  #stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none}
+  body.entered #stars{display:block}
+  .wrap{position:relative;z-index:1}
+
+  /* ===== draft board: fill each cell with its position color ===== */
+  /* placed last so it wins ties against the earlier plain .gc background rules,
+     while leaving .gc.me / .gc.riv / .gc.now box-shadow + border-color untouched */
+  .gc.pos-QB{background:rgba(255,92,92,.18)}
+  .gc.pos-RB{background:rgba(61,214,140,.18)}
+  .gc.pos-WR{background:rgba(77,141,255,.18)}
+  .gc.pos-TE{background:rgba(255,148,48,.18)}
+  .gc.pos-K,.gc.pos-DEF{background:rgba(169,188,207,.14)}
+  .gc.empty{background:transparent}
+
+  /* ===== "your pick" flash: travelling weight-wave ===== */
+  #ypflash{position:fixed;inset:0;z-index:220;display:none;place-items:center;
+      background:rgba(10,11,16,.84);backdrop-filter:blur(3px);pointer-events:none}
+  #ypflash.on{display:grid}
+  #ypword{display:flex;justify-content:center;line-height:1;letter-spacing:-.01em;
+      font-family:"Inter",system-ui,sans-serif;font-size:clamp(32px,8.4vw,84px);will-change:contents}
+  #ypword .yl{display:inline-block;color:#eef0f6;text-shadow:0 0 18px rgba(240,180,74,0);
+      font-variation-settings:"wght" 100;transform-origin:50% 60%}
+  #ypword .ysp{display:inline-block;width:.32em}
+  #ypsub{margin-top:16px;text-align:center;font-family:var(--mono);font-size:11px;
+      letter-spacing:.26em;text-transform:uppercase;color:var(--warn)}
+  @media (prefers-reduced-motion:reduce){
+    #ypword .yl{font-variation-settings:"wght" 700!important;color:var(--warn)!important;
+      text-shadow:0 0 16px rgba(240,180,74,.28)!important}
+  }
+</style>
+
+<div id="splash"><div class="tfb" id="splashTitle"><span class="t1">TFB</span><span class="t2">The Empire Strikes Back-To-Back</span></div><div class="stage"><button class="jel" type="button" id="enterBtn">Enter Draft Room</button><div id="loader"><svg class="c14-orange" viewBox="0 0 120 120" width="120" height="120"><circle class="c14-peel" cx="60" cy="60" r="50"/><circle cx="60" cy="60" r="5" fill="#f4f6fb"/><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /><path class="c14-segment" d="M 60 17 A 43 43 0 0 1 89 29 L 63 56 A 5 5 0 0 1 57 56 Z" /></svg><div id="loadlab">Loading board</div></div></div></div>
+<canvas id="stars"></canvas>
+<div class="wrap">
+  <div class="tfb" id="pageTitle"><span class="t1">TFB</span><span class="t2">The Empire Strikes Back-To-Back</span></div>
+  <div class="rail">
+    <div class="railgrid">
+      <div class="onclock"><small>On the clock</small><span id="clk">—</span></div>
+      <div class="clockwrap">
+        <div class="onclock" style="font-size:9.5px"><small style="margin-bottom:2px">On the clock for</small></div>
+        <div class="pclock" id="pclock">0:00</div>
+        <div class="status" style="margin-top:5px"><span class="livedot" id="dot"></span><span id="stat">Manual mode</span></div>
+        <select class="plimit" id="plimit" title="Pick clock length">
+          <option value="0">no limit</option><option value="30">30s</option>
+          <option value="60">60s</option><option value="90">90s</option>
+          <option value="120" selected>2m</option></select>
+      </div>
+      <div class="untilwrap"><div class="until"><small>Your pick in</small><span id="untl">—</span></div>
+        <button class="follow" id="syncBtn" style="margin-top:8px">Sync league</button>
+      <div class="syncpop" id="syncCard">
+        <h2>Sync league</h2>
+        <div class="row" style="margin-bottom:0">
+          <div style="flex:2;min-width:150px"><label>Sleeper draft ID or URL</label>
+            <input id="did" placeholder="sleeper.com/draft/nfl/1234567890"></div>
+          <div style="flex:0 0 auto"><button class="btn-go" id="connect">Connect</button></div>
+        </div>
+        <div id="conmsg"></div>
+        <div hidden>
+        <input id="slot" type="number" value="10" min="1">
+        <input id="teams" type="number" value="12" min="2">
+        <input id="rounds" type="number" value="13" min="1">
+        <input type="range" id="spread" min="10" max="45" value="24"><output id="spreadO">.24</output>
+        <input type="range" id="needw" min="0" max="150" value="100"><output id="needwO">1.00</output>
+        <textarea id="raw"></textarea><button id="add"></button><button id="reset"></button>
+        <div id="loadmsg"></div>
+      </div>
+      </div>
+    </div>
+    <div class="steprow" id="steprow"></div>
+    <div class="dirbar"><span id="dirL"></span><span class="arrow" id="dirA"></span><span id="dirR"></span></div>
+  </div>
+
+  <div class="cols">
+
+    <!-- ================= LEFT: queue ================= -->
+    <div class="col" id="colL">
+      <div class="colhead">
+        <h2>Players available</h2>
+        <span class="cnt" id="qcnt"></span>
+      </div>
+      <div class="tabs" id="ltabs">
+        <button class="tab on" id="ltPool">Players</button>
+        <button class="tab" id="ltAdp">Sleeper ADP</button>
+        <button class="tab" id="ltOther">Other Rankings</button>
+        <button class="tab" id="ltSug">Suggested</button>
+        <button class="tab" id="ltRounds">My rounds</button>
+      </div>
+      <div class="tabs" id="subtabs">
+        <button class="tab on" data-p="ALL">All</button>
+        <button class="tab" data-p="QB">QB</button>
+        <button class="tab" data-p="RB">RB</button>
+        <button class="tab" data-p="WR">WR</button>
+        <button class="tab" data-p="TE">TE</button>
+      </div>
+      <div id="ecrlist"></div>
+      <div id="adplist" style="display:none"></div>
+      <div id="otherlist" style="display:none"></div>
+      <div id="suglist" style="display:none"></div>
+      <div id="paneRounds" style="display:none">
+        <div class="card" style="padding:11px">
+          <div class="subtabs" id="rndTabs"></div>
+          <p class="adpnote" id="rndRange"></p>
+          <div id="rndList"></div>
+        </div>
+        <p class="hint">Averaged across 8 PVP mock drafts, snake-mapped to your own pick in each round. n/8 shows how many of those mocks a player actually appeared in — treat low counts as thin data.</p>
+      </div>
+    </div>
+
+    <!-- ================= MIDDLE: my team ================= -->
+    <div class="col" id="colM">
+      <div class="colhead"><h2>Your roster</h2><span class="cnt" id="tcnt"></span></div>
+
+      <div hidden>
+        <input id="manName"><button id="manTake"></button><button id="manUndo"></button>
+        <div id="sugg"></div>
+      </div>
+
+      <div id="myteam"></div>
+    </div>
+
+    <!-- ================= RIGHT: everything else ================= -->
+    <div class="col" id="colR">
+      <div class="colhead">
+        <div class="tabs">
+          <button class="tab on" id="tabI" data-r="intel">Intel</button>
+          <button class="tab" id="tabB" data-r="board">Draft board</button>
+          <button class="tab" id="tabS" data-r="sheet">Quick sheet</button>
+        </div>
+        <span class="cnt" id="rcnt"></span>
+      </div>
+
+      <div id="paneBoard" style="display:none">
+        <div class="card" style="padding:11px">
+          <div class="gbar">
+            <span class="cnt" id="gwhere">—</span>
+            <div>
+              <button class="follow on" id="followBtn">Following live</button>
+              <button class="follow" id="jumpNow">Jump to now</button>
+              <button class="follow" id="exportBtn" title="Copy the board and open a new Google Sheet">Export</button>
+              <button class="morph" id="wideBtn" aria-label="Widen the draft board" aria-pressed="false"
+                title="Widen the board across the roster column"><i></i><i></i><i></i></button>
+            </div>
+          </div>
+          <div class="gridwrap" id="gridwrap"><div class="dgrid" id="dgrid"></div></div>
+          <p class="hint">Blue column is you. Pink are slots 11 and 12. Gold outline is one of your targets.</p>
+        </div>
+      </div>
+
+      <div id="paneSheet" style="display:none">
+        <div class="subtabs" id="qsTabs">
+          <button class="subtab on" id="qsTabQueue" data-q="queue">Queue</button>
+          <button class="subtab" id="qsTabNotes" data-q="notes">Things to remember</button>
+          <button class="subtab" id="qsTabSleep" data-q="sleepers">Sleepers</button>
+        </div>
+
+        <div id="qsPaneSleep" style="display:none">
+          <div class="card" style="padding:11px">
+            <div class="row" style="margin-bottom:6px">
+              <div style="flex:3;min-width:140px"><input id="slpName" placeholder="Add a sleeper" autocomplete="off"></div>
+              <div style="flex:0 0 auto"><button class="btn-go" id="slpAdd">Add</button></div>
+            </div>
+            <div id="slpSugg"></div>
+          </div>
+          <p class="hint" style="margin:0 0 8px">Draft with intent — reach a round early if you have to. Strongest case, clearest path to volume.</p>
+          <div id="slpList"></div>
+        </div>
+
+        <div id="qsPaneNotes" style="display:none">
+          <div class="card" style="padding:11px">
+            <div class="row" style="margin-bottom:6px">
+              <div style="flex:3;min-width:140px"><input id="ttrName" placeholder="Add a note to remember" autocomplete="off"></div>
+              <div style="flex:0 0 auto"><button class="btn-go" id="ttrAdd">Add</button></div>
+            </div>
+          </div>
+          <div id="ttrList"></div>
+        </div>
+
+        <div id="qsPaneQueue">
+        <div class="card">
+          <h2>Sync league</h2>
+          <div class="row" style="margin-bottom:0">
+            <div style="flex:2;min-width:150px"><label>Sleeper draft ID or URL</label>
+              <input id="did2" placeholder="sleeper.com/draft/nfl/1234567890"></div>
+            <div style="flex:0 0 auto"><button class="btn-go" id="connect2">Connect</button></div>
+          </div>
+          <div id="conmsg2"></div>
+        </div>
+
+        <div class="card" style="padding:11px">
+          <div class="row" style="margin-bottom:6px">
+            <div style="flex:3;min-width:140px"><input id="qsName" placeholder="Add a player to your sheet" autocomplete="off"></div>
+            <div style="flex:0 0 auto"><button class="btn-go" id="qsAdd">Add</button></div>
+          </div>
+          <div id="qsSugg"></div>
+        </div>
+        <div id="qsList"></div>
+        </div>
+      </div>
+
+      <div id="paneIntel">
+      <div class="card"><div class="intel" id="intel"></div></div>
+
+      <div class="card">
+        <h2>Between you and your pick</h2>
+        <div id="rivals"></div>
+      </div>
+
+      <div class="card"><h2>Recent picks</h2><div id="ticker"><p class="hint">Nothing logged yet.</p></div></div>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="pager" id="pager" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+</div>
+
+<script>
+/* ============ embedded data: FantasyPros 2026 ECR, top 260 ============ */
+const POOL=[[1,"Jahmyr Gibbs","RB","DET",1],[2,"Bijan Robinson","RB","ATL",1],[3,"Ja'Marr Chase","WR","CIN",1],[4,"Puka Nacua","WR","LAR",1],[5,"Jaxon Smith-Njigba","WR","SEA",1],[6,"Amon-Ra St. Brown","WR","DET",1],[7,"Jonathan Taylor","RB","IND",1],[8,"Christian McCaffrey","RB","SF",1],[9,"James Cook III","RB","BUF",1],[10,"CeeDee Lamb","WR","DAL",1],[11,"Justin Jefferson","WR","MIN",2],[12,"Chase Brown","RB","CIN",2],[13,"Saquon Barkley","RB","PHI",2],[14,"A.J. Brown","WR","NE",2],[15,"Drake London","WR","ATL",2],[16,"De'Von Achane","RB","MIA",2],[17,"Kenneth Walker III","RB","KC",2],[18,"Omarion Hampton","RB","LAC",2],[19,"Nico Collins","WR","HOU",2],[20,"Brock Bowers","TE","LV",2],[21,"Derrick Henry","RB","BAL",2],[22,"George Pickens","WR","DAL",2],[23,"Ashton Jeanty","RB","LV",2],[24,"Chris Olave","WR","NO",2],[25,"Trey McBride","TE","ARI",3],[26,"Malik Nabers","WR","NYG",3],[27,"DeVonta Smith","WR","PHI",3],[28,"Josh Allen","QB","BUF",3],[29,"Rashee Rice","WR","KC",3],[30,"Zay Flowers","WR","BAL",3],[31,"Kyren Williams","RB","LAR",3],[32,"Javonte Williams","RB","DAL",3],[33,"Breece Hall","RB","NYJ",3],[34,"Tee Higgins","WR","CIN",3],[35,"Jaylen Waddle","WR","DEN",3],[36,"Ladd McConkey","WR","LAC",3],[37,"Lamar Jackson","QB","BAL",3],[38,"Garrett Wilson","WR","NYJ",3],[39,"Tetairoa McMillan","WR","CAR",3],[40,"Jeremiyah Love","RB","ARI",3],[41,"Colston Loveland","TE","CHI",3],[42,"Emeka Egbuka","WR","TB",3],[43,"Travis Etienne Jr.","RB","NO",4],[44,"Drake Maye","QB","NE",4],[45,"D'Andre Swift","RB","CHI",4],[46,"Terry McLaurin","WR","WAS",4],[47,"Luther Burden III","WR","CHI",4],[48,"Davante Adams","WR","LAR",4],[49,"Joe Burrow","QB","CIN",4],[50,"Jameson Williams","WR","DET",4],[51,"Bucky Irving","RB","TB",4],[52,"Tyler Warren","TE","IND",4],[53,"Cam Skattebo","RB","NYG",4],[54,"David Montgomery","RB","HOU",4],[55,"DJ Moore","WR","BUF",4],[56,"Christian Watson","WR","GB",4],[57,"Quinshon Judkins","RB","CLE",4],[58,"Rome Odunze","WR","CHI",4],[59,"Bhayshul Tuten","RB","JAC",4],[60,"Jalen Hurts","QB","PHI",4],[61,"Jadarian Price","RB","SEA",4],[62,"Mike Evans","WR","SF",4],[63,"Jayden Daniels","QB","WAS",4],[64,"Parker Washington","WR","JAC",4],[65,"TreVeyon Henderson","RB","NE",5],[66,"Caleb Williams","QB","CHI",5],[67,"Rhamondre Stevenson","RB","NE",5],[68,"Tucker Kraft","TE","GB",5],[69,"Jaylen Warren","RB","PIT",5],[70,"Marvin Harrison Jr.","WR","ARI",5],[71,"Justin Herbert","QB","LAC",5],[72,"Carnell Tate","WR","TEN",5],[73,"Trevor Lawrence","QB","JAC",5],[74,"Dak Prescott","QB","DAL",5],[75,"Tony Pollard","RB","TEN",5],[76,"DK Metcalf","WR","PIT",5],[77,"Brian Thomas Jr.","WR","JAC",5],[78,"Harold Fannin Jr.","TE","CLE",5],[79,"Rico Dowdle","RB","PIT",5],[80,"Chris Godwin Jr.","WR","TB",5],[81,"Sam LaPorta","TE","DET",5],[82,"Jonathon Brooks","RB","CAR",5],[83,"Kyle Pitts Sr.","TE","ATL",5],[84,"Courtland Sutton","WR","DEN",5],[85,"Quentin Johnston","WR","LAC",5],[86,"J.K. Dobbins","RB","DEN",5],[87,"Michael Pittman Jr.","WR","PIT",5],[88,"Michael Wilson","WR","ARI",5],[89,"MarShawn Lloyd","RB","GB",5],[90,"Blake Corum","RB","LAR",5],[91,"Alec Pierce","WR","IND",5],[92,"George Kittle","TE","SF",6],[93,"Chuba Hubbard","RB","CAR",6],[94,"Brock Purdy","QB","SF",6],[95,"Josh Downs","WR","IND",6],[96,"Bo Nix","QB","DEN",6],[97,"Jaxson Dart","QB","NYG",6],[98,"RJ Harvey","RB","DEN",6],[99,"Stefon Diggs","WR","WAS",6],[100,"Jordan Mason","RB","MIN",6],[101,"Jacory Croskey-Merritt","RB","WAS",6],[102,"Wan'Dale Robinson","WR","TEN",6],[103,"Patrick Mahomes II","QB","KC",6],[104,"Travis Kelce","TE","KC",6],[105,"Jayden Reed","WR","GB",6],[106,"Kenny Gainwell","RB","TB",6],[107,"Jordan Addison","WR","MIN",6],[108,"Jared Goff","QB","DET",6],[109,"Matthew Stafford","QB","LAR",6],[110,"Dalton Kincaid","TE","BUF",6],[111,"Makai Lemon","WR","PHI",6],[112,"Kyle Monangai","RB","CHI",6],[113,"Rachaad White","RB","WAS",6],[114,"Jakobi Meyers","WR","JAC",6],[115,"KC Concepcion","WR","CLE",6],[116,"Isaiah Likely","TE","NYG",6],[117,"Dallas Goedert","TE","PHI",6],[118,"Aaron Jones Sr.","RB","MIN",6],[119,"Kyler Murray","QB","MIN",6],[120,"De'Zhaun Stribling","WR","SF",6],[121,"Jordan Love","QB","GB",6],[122,"Baker Mayfield","QB","TB",6],[123,"Jake Ferguson","TE","DAL",6],[124,"Matthew Golden","WR","GB",6],[125,"Chris Rodriguez Jr.","RB","JAC",6],[126,"Romeo Doubs","WR","NE",6],[127,"Xavier Worthy","WR","KC",6],[128,"Mark Andrews","TE","BAL",6],[129,"Tyler Allgeier","RB","ARI",6],[130,"Juwan Johnson","TE","NO",6],[131,"Jalen Coker","WR","CAR",6],[132,"Woody Marks","RB","HOU",6],[133,"Tyler Shough","QB","NO",6],[134,"Khalil Shakir","WR","BUF",6],[135,"Malik Willis","QB","MIA",6],[136,"Deebo Samuel Sr.","WR","SF",6],[137,"Tyjae Spears","RB","TEN",7],[138,"Jonah Coleman","RB","DEN",7],[139,"Rashid Shaheed","WR","SEA",7],[140,"Jordyn Tyson","WR","NO",7],[141,"Sam Darnold","QB","SEA",7],[142,"Keaton Mitchell","RB","LAC",7],[143,"Mike Washington Jr.","RB","LV",7],[144,"Dylan Sampson","RB","CLE",7],[145,"Zach Charbonnet","RB","SEA",7],[146,"Tank Bigsby","RB","PHI",7],[147,"Hunter Henry","TE","NE",7],[148,"C.J. Stroud","QB","HOU",7],[149,"Brenton Strange","TE","JAC",7],[150,"Daniel Jones","QB","IND",7],[151,"Chig Okonkwo","TE","WAS",7],[152,"Dalton Schultz","TE","HOU",7],[153,"Denzel Boston","WR","CLE",7],[154,"Tre Tucker","WR","LV",7],[155,"Braelon Allen","RB","NYJ",7],[156,"Cam Ward","QB","TEN",7],[157,"Adonai Mitchell","WR","NYJ",7],[158,"Alvin Kamara","RB","NO",7],[159,"Josh Jacobs","RB","GB",7],[160,"Tyrone Tracy Jr.","RB","NYG",7],[161,"Brian Robinson Jr.","RB","ATL",7],[162,"Emmett Johnson","RB","KC",7],[163,"Kayshon Boutte","WR","HOU",7],[164,"Jalen McMillan","WR","TB",7],[165,"Dontayvion Wicks","WR","PHI",7],[166,"Ray Davis","RB","BUF",7],[167,"Jerry Jeudy","WR","CLE",7],[168,"Tre' Harris","WR","LAC",7],[169,"Terrance Ferguson","TE","LAR",7],[170,"Ryan Flournoy","WR","DAL",7],[171,"Pat Bryant","WR","DEN",7],[172,"Jauan Jennings","WR","MIN",7],[173,"AJ Barner","TE","SEA",7],[174,"Omar Cooper Jr.","WR","NYJ",7],[175,"Jalen Nailor","WR","LV",7],[176,"T.J. Hockenson","TE","MIN",7],[177,"Bryce Young","QB","CAR",8],[178,"Malik Washington","WR","MIA",8],[179,"Keenan Allen","WR","IND",8],[180,"Houston Texans","DEF","HOU",8],[181,"Kenyon Sadiq","TE","NYJ",8],[182,"Isiah Pacheco","RB","DET",8],[183,"Jaylin Noel","WR","HOU",8],[184,"Denver Broncos","DEF","DEN",8],[185,"Calvin Ridley","WR","TEN",8],[186,"Los Angeles Rams","DEF","LAR",8],[187,"Seattle Seahawks","DEF","SEA",8],[188,"Kimani Vidal","RB","LAC",8],[189,"Jacoby Brissett","QB","ARI",8],[190,"Gunnar Helm","TE","TEN",8],[191,"Philadelphia Eagles","DEF","PHI",8],[192,"Oronde Gadsden II","TE","LAC",8],[193,"Travis Hunter","WR","JAC",8],[194,"Pat Freiermuth","TE","PIT",8],[195,"Rashod Bateman","WR","BAL",8],[196,"New England Patriots","DEF","NE",8],[197,"Minnesota Vikings","DEF","MIN",8],[198,"Pittsburgh Steelers","DEF","PIT",8],[199,"Jacksonville Jaguars","DEF","JAC",8],[200,"Malik Davis","RB","DAL",8],[201,"Sean Tucker","RB","TB",8],[202,"Los Angeles Chargers","DEF","LAC",8],[203,"Nicholas Singleton","RB","TEN",8],[204,"Brandon Aubrey","K","DAL",8],[205,"Baltimore Ravens","DEF","BAL",8],[206,"Cade Otton","TE","TB",8],[207,"Aaron Rodgers","QB","PIT",8],[208,"Cameron Dicker","K","LAC",8],[209,"Ja'Kobi Lane","WR","BAL",8],[210,"Chris Bell","WR","MIA",8],[211,"Ka'imi Fairbairn","K","HOU",8],[212,"Kansas City Chiefs","DEF","KC",8],[213,"Kaelon Black","RB","SF",8],[214,"Kaytron Allen","RB","WAS",8],[215,"Isaac TeSlaa","WR","DET",8],[216,"Cooper Kupp","WR","SEA",8],[217,"Zachariah Branch","WR","ATL",8],[218,"Malachi Fields","WR","NYG",8],[219,"Geno Smith","QB","NYJ",8],[220,"Jaylen Wright","RB","MIA",8],[221,"Cam Little","K","JAC",8],[222,"Najee Harris","RB","NYG",8],[223,"Jason Myers","K","SEA",8],[224,"George Holani","RB","SEA",8],[225,"Darnell Mooney","WR","NYG",8],[226,"Green Bay Packers","DEF","GB",8],[227,"James Conner","RB","ARI",8],[228,"Jake Bates","K","DET",8],[229,"Eddy Pineiro","K","SF",8],[230,"Emanuel Wilson","RB","SEA",8],[231,"Tyler Loop","K","BAL",8],[232,"Justice Hill","RB","BAL",8],[233,"Germie Bernard","WR","PIT",8],[234,"Detroit Lions","DEF","DET",9],[235,"Harrison Mevis","K","LAR",9],[236,"Evan Engram","TE","DEN",9],[237,"Devaughn Vele","WR","NO",9],[238,"Samaje Perine","RB","CIN",9],[239,"Fernando Mendoza","QB","LV",9],[240,"Ted Hurst III","WR","TB",9],[241,"Buffalo Bills","DEF","BUF",9],[242,"Troy Franklin","WR","DEN",9],[243,"Cairo Santos","K","CHI",9],[244,"Demond Claiborne","RB","MIN",9],[245,"Tank Dell","WR","HOU",9],[246,"David Njoku","TE","LAC",9],[247,"Chris Brooks","RB","GB",9],[248,"Evan McPherson","K","CIN",9],[249,"Chase McLaughlin","K","TB",9],[250,"Jack Bech","WR","LV",9],[251,"Antonio Williams","WR","WAS",9],[252,"Kaleb Johnson","RB","GB",9],[253,"Keon Coleman","WR","BUF",9],[254,"Cleveland Browns","DEF","CLE",9],[255,"Andy Borregales","K","NE",9],[256,"Colby Parkinson","TE","LAR",9],[257,"Caleb Douglas","WR","MIA",9],[258,"Jordan James","RB","SF",9],[259,"Greg Dulcich","TE","MIA",9],[260,"Ollie Gordon II","RB","MIA",9],[261,"Harrison Butker","K","KC",9],[262,"Chris Boswell","K","PIT",9],[263,"Tory Horton","WR","SEA",9],[264,"Michael Penix Jr.","QB","ATL",9],[265,"Isaiah Davis","RB","NYJ",9],[266,"Elic Ayomanor","WR","TEN",9],[267,"Ty Johnson","RB","BUF",9],[268,"Tyquan Thornton","WR","KC",9],[269,"LeQuint Allen Jr.","RB","JAC",9],[270,"Tua Tagovailoa","QB","ATL",9],[271,"Kirk Cousins","QB","LV",9],[272,"Wil Lutz","K","DEN",9],[273,"Chimere Dike","WR","TEN",9],[274,"Kendre Miller","RB","NO",9],[275,"Seth McGowan","RB","IND",9],[276,"DJ Giddens","RB","IND",9],[277,"Darius Slayton","WR","NYG",9],[278,"Shedeur Sanders","QB","CLE",9],[279,"Deshaun Watson","QB","CLE",9],[280,"Will Reichard","K","MIN",9],[281,"Xavier Legette","WR","CAR",9],[282,"Christian Kirk","WR","SF",9],[283,"Elijah Sarratt","WR","BAL",9],[284,"Cyrus Allen","WR","KC",9],[285,"Mason Taylor","TE","NYJ",9],[286,"Marvin Mims Jr.","WR","DEN",9],[287,"Atlanta Falcons","DEF","ATL",9],[288,"Brashard Smith","RB","KC",9],[289,"San Francisco 49ers","DEF","SF",9],[290,"Kyle Williams","WR","NE",9],[291,"Adam Randall","RB","BAL",9],[292,"Theo Johnson","TE","NYG",9],[293,"Emari Demercado","RB","DAL",9],[294,"Devin Singletary","RB","NYG",9],[295,"New Orleans Saints","DEF","NO",9],[296,"Eli Stowers","TE","PHI",9],[297,"Mack Hollins","WR","NE",9],[298,"Devin Neal","RB","FA",9],[299,"Jaydon Blue","RB","PHI",9],[300,"Hollywood Brown","WR","PHI",10],[301,"Mike Gesicki","TE","CIN",10],[302,"Isaiah Bond","WR","CLE",10],[303,"Trevor Etienne","RB","CAR",10],[304,"Indianapolis Colts","DEF","IND",10],[305,"Skyler Bell","WR","BUF",10],[306,"Tahj Brooks","RB","CIN",10],[307,"Trey Benson","RB","ARI",10],[308,"Darren Waller","TE","CAR",10],[309,"Jerome Ford","RB","WAS",10],[310,"Isaac Guerendo","RB","SF",10],[311,"Audric Estime","RB","NO",10],[312,"Brandon Aiyuk","WR","SF",10],[313,"Jarquez Hunter","RB","FA",10],[314,"Chicago Bears","DEF","CHI",10],[315,"Jake Tonges","TE","SF",10],[316,"Will Shipley","RB","PHI",10],[317,"Andrei Iosivas","WR","CIN",10],[318,"DeMario Douglas","WR","NE",10],[319,"Darnell Washington","TE","PIT",10],[320,"Jaleel McLaughlin","RB","CLE",10],[321,"Michael Mayer","TE","LV",10],[322,"Charlie Kolar","TE","LAC",10],[323,"Kareem Hunt","RB","FA",10],[324,"Tyreek Hill","WR","FA",10],[325,"Oscar Delp","TE","NO",10],[326,"Charlie Smyth","K","NO",10],[327,"Jahan Dotson","WR","ATL",10],[328,"Xavier Hutchinson","WR","HOU",10],[329,"Bryce Lance","WR","NO",10],[330,"Carson Beck","QB","ARI",10],[331,"Elijah Arroyo","TE","SEA",10],[332,"Jalen Tolbert","WR","MIA",10],[333,"Eli Raridon","TE","NE",10],[334,"Dawson Knox","TE","BUF",10],[335,"Erick All Jr.","TE","CIN",10],[336,"Dallas Cowboys","DEF","DAL",10],[337,"Kendrick Bourne","WR","ARI",10],[338,"Bam Knight","RB","ARI",10],[339,"Cole Kmet","TE","CHI",10],[340,"Joe Mixon","RB","FA",10],[341,"Tez Johnson","WR","TB",11],[342,"Tyler Higbee","TE","LAR",11],[343,"Noah Gray","TE","KC",11],[344,"Jalen Royals","WR","KC",11],[345,"Luke McCaffrey","WR","WAS",11],[346,"Brenen Thompson","WR","LAC",11],[347,"Konata Mumpfield","WR","LAR",11],[348,"Jake Elliott","K","PHI",11],[349,"Joshua Palmer","WR","BUF",11],[350,"J.J. McCarthy","QB","MIN",11],[351,"Max Klare","TE","LAR",11],[352,"Olamide Zaccheaus","WR","ATL",11],[353,"Mac Jones","QB","SF",11],[354,"Tyler Bass","K","BUF",11],[355,"Roman Wilson","WR","PIT",11],[356,"Ja'Tavion Sanders","TE","CAR",11],[357,"Jacob Saylors","RB","DET",11],[358,"Malik Benson","WR","LV",11],[359,"Justin Fields","QB","KC",11],[360,"Treylon Burks","WR","WAS",11],[361,"Eli Heidenreich","RB","PIT",11],[362,"Ty Simpson","QB","LAR",11],[363,"Roschon Johnson","RB","CHI",11],[364,"Carolina Panthers","DEF","CAR",11],[365,"Kalif Raymond","WR","CHI",11],[366,"Cedric Tillman","WR","NO",11],[367,"Chris Brazzell II","WR","CAR",11],[368,"Michael Carter","RB","TEN",11],[369,"Tampa Bay Buccaneers","DEF","TB",11],[370,"Zavion Thomas","WR","CHI",11],[371,"New York Giants","DEF","NYG",11],[372,"Trey Smack","K","GB",11],[373,"Raheim Sanders","RB","CLE",11],[374,"KaVontae Turpin","WR","DAL",11],[375,"Savion Williams","WR","GB",11],[376,"Demarcus Robinson","WR","SF",11],[377,"Dont'e Thornton Jr.","WR","LV",11],[378,"Anthony Richardson Sr.","QB","IND",11],[379,"Rasheen Ali","RB","BAL",11],[380,"Kevin Coleman Jr.","WR","MIA",11],[381,"Tommy Tremble","TE","CAR",11],[382,"Noah Fant","TE","NO",11],[383,"Ben Sinnott","TE","WAS",11],[384,"Odell Beckham Jr.","WR","NYG",11],[385,"Tutu Atwell","WR","LAR",11],[386,"Colbie Young","WR","CIN",11],[387,"J'Mari Taylor","RB","JAC",11],[388,"CJ Daniels","WR","LAR",11],[389,"Sione Vaki","RB","DET",11],[390,"Joe Flacco","QB","CIN",11],[391,"Jawhar Jordan","RB","HOU",11],[392,"Kyle Juszczyk","RB","SF",11],[393,"John Metchie III","WR","CAR",11],[394,"Jaylin Lane","WR","WAS",11],[395,"Mitchell Evans","TE","CAR",11],[396,"Daniel Bellinger","TE","TEN",11],[397,"Jameis Winston","QB","NYG",11],[398,"Tennessee Titans","DEF","TEN",11],[399,"Jordan Whittington","WR","LAR",11],[400,"Austin Ekeler","RB","FA",11],[401,"Daniel Carlson","K","NO",11],[402,"Barion Brown","WR","NO",11],[403,"Marlin Klein","TE","HOU",11],[404,"Marcus Mariota","QB","WAS",11],[405,"Austin Hooper","TE","ATL",11],[406,"Cincinnati Bengals","DEF","CIN",11],[407,"Elijah Higgins","TE","ARI",11],[408,"Spencer Shrader","K","IND",11],[409,"Ashton Dulin","WR","IND",11],[410,"Jonnu Smith","TE","GB",11],[411,"Dylan Laube","RB","LV",11],[412,"Zane Gonzalez","K","FA",11],[413,"Cade Klubnik","QB","NYJ",11],[414,"Jeremy McNichols","RB","WAS",11],[415,"Justin Joly","TE","FA",11],[416,"Matt Hibner","TE","BAL",11],[417,"Jam Miller","RB","FA",11],[418,"Luke Musgrave","TE","GB",11],[419,"Miami Dolphins","DEF","MIA",12],[420,"Devontez Walker","WR","BAL",12],[421,"Nick Westbrook-Ikhine","WR","FA",12],[422,"Corey Kiner","RB","NE",12],[423,"Ronnie Rivers","RB","LAR",12],[424,"Blake Grupe","K","NYJ",12],[425,"Hunter Luepke","RB","DAL",12],[426,"Phil Mafah","RB","FA",12],[427,"Tai Felton","WR","MIN",12],[428,"AJ Dillon","RB","CAR",12],[429,"Las Vegas Raiders","DEF","LV",12],[430,"Dyami Brown","WR","WAS",12],[431,"Nick Folk","K","ATL",12],[432,"Adam Trautman","TE","DEN",12],[433,"Jackson Hawes","TE","BUF",12],[434,"Tanner Koziol","TE","JAC",12],[435,"Deion Burks","WR","IND",12],[436,"Reggie Gilliam","RB","NE",12],[437,"Dameon Pierce","RB","PHI",12],[438,"Joe Milton III","QB","DAL",12],[439,"Ameer Abdullah","RB","JAC",12],[440,"Chad Ryland","K","ARI",12],[441,"Max Bredeson","RB","MIN",12],[442,"Khalil Herbert","RB","FA",12],[443,"Ryan Fitzgerald","K","CAR",12],[444,"New York Jets","DEF","NYJ",12],[445,"Josh Oliver","TE","MIN",12],[446,"John Bates","TE","WAS",12],[447,"Arizona Cardinals","DEF","ARI",12],[448,"Joey Slye","K","TEN",12],[449,"Brandon McManus","K","FA",12],[450,"Washington Commanders","DEF","WAS",12],[451,"Tyler Badie","RB","DEN",12],[452,"Antonio Williams","RB","FA",12],[453,"Josh Williams","RB","TB",12],[454,"Antonio Gibson","RB","FA",12],[455,"Jimmy Horn Jr.","WR","CAR",12],[456,"Zach Ertz","TE","FA",12],[457,"Damien Martinez","RB","FA",12],[458,"Tyler Goodson","RB","ATL",12],[459,"Greg Dortch","WR","BUF",12],[460,"Tommy Myers","TE","FA",12],[461,"Elijah Moore","WR","PHI",12],[462,"Isaiah Williams","WR","NYJ",12],[463,"Dohnte Meyers","WR","CIN",12],[464,"Jonathan Mingo","WR","DAL",12],[465,"Will Kacmarek","TE","MIA",12],[466,"Marquez Valdes-Scantling","WR","FA",12],[467,"Jordan Watkins","WR","SF",12],[468,"Nate Boerkircher","TE","JAC",12],[469,"Miles Sanders","RB","FA",12],[470,"Mo Alie-Cox","TE","IND",12],[471,"Brock Wright","TE","DET",12],[472,"Drew Sample","TE","CIN",12],[473,"Ben Sauls","K","FA",12],[474,"Luke Schoonmaker","TE","DAL",12],[475,"Scotty Miller","WR","CHI",12],[476,"Julius Chestnut","RB","TEN",12],[477,"Chris Blair","WR","ATL",12],[478,"Isaiah Williams","WR","FA",12],[479,"Josh Cuevas","TE","BAL",12],[480,"Tanner Hudson","TE","CIN",12],[481,"DeAndre Hopkins","WR","BAL",12],[482,"Kaden Wetjen","WR","PIT",12],[483,"Tyler Conklin","TE","DET",12],[484,"Tim Patrick","WR","NYJ",12],[485,"Nate Adkins","TE","DEN",12],[486,"Durham Smythe","TE","BAL",12],[487,"Jelani Woods","TE","NYJ",12],[488,"Terrell Jennings","RB","FA",12],[489,"Jahdae Walker","WR","CHI",12],[490,"Zavier Scott","RB","CHI",12],[491,"Dominic Zvada","K","NYG",12],[492,"Xavier Smith","WR","LAR",12],[493,"Josh Cameron","WR","JAC",12],[494,"Nathan Carter","RB","KC",12],[495,"Kalel Mullings","RB","TEN",12],[496,"Drew Stevens","K","WAS",12],[497,"Reggie Virgil","WR","ARI",12],[498,"Jaydn Ott","RB","KC",12],[499,"Taylen Green","QB","CLE",12],[500,"Moliki Matavao","TE","NO",12],[501,"Alec Ingold","RB","LAC",12],[502,"Robert Henry Jr.","RB","WAS",12],[503,"Tyrod Taylor","QB","GB",12],[504,"Patrick Ricard","RB","NYG",12],[505,"Brycen Tremayne","WR","CAR",12],[506,"KeAndre Lambert-Smith","WR","LAC",12],[507,"Mitch Tinsley","WR","HOU",12],[508,"Efton Chism III","WR","NE",12],[509,"Xavier Restrepo","WR","TEN",12],[510,"Lil'Jordan Humphrey","WR","DEN",12],[511,"Jalen Brooks","WR","ARI",12],[512,"Tyler Lockett","WR","LV",12],[513,"Riley Leonard","QB","IND",12],[514,"Brittain Brown","RB","CHI",12],[515,"Kene Nwangwu","RB","NYJ",12],[516,"Ben Sims","TE","MIA",12],[517,"Tom Kennedy","WR","DET",12],[518,"Tay Martin","WR","DET",12],[519,"Derius Davis","WR","LAC",12],[520,"Jared Wayne","WR","HOU",12],[521,"Jake Bobo","WR","SEA",12],[522,"Jalen Reagor","WR","FA",12],[523,"Travis Homer","RB","PIT",12],[524,"Jacob Cowing","WR","SF",12],[525,"Michael Trigg","TE","DAL",12],[526,"Sam Roush","TE","CHI",12],[527,"Foster Moreau","TE","HOU",12],[528,"Luke Farrell","TE","SF",13],[529,"Seydou Traore","TE","MIA",13],[530,"Jeremy Ruckert","TE","NYJ",13],[531,"Bauer Sharp","TE","TB",13],[532,"Will Dissly","TE","FA",13],[533,"Cade Stover","TE","HOU",13],[534,"Jake Moody","K","BAL",13],[535,"Charlie Woerner","TE","ATL",13],[536,"Joe Royer","TE","CLE",13],[537,"Davis Allen","TE","LAR",13],[538,"Drew Ogletree","TE","IND",13],[539,"Brevyn Spann-Ford","TE","DAL",13],[540,"Payne Durham","TE","TB",13],[541,"Josh Whyle","TE","GB",13],[542,"Carsen Ryan","TE","CLE",13],[543,"Eric Saubert","TE","SEA",13],[544,"Johnny Mundt","TE","PHI",13],[545,"Jared Wiley","TE","KC",13],[546,"Zamir White","RB","NO",13],[547,"Grant Calcaterra","TE","PHI",13],[548,"Jalen Milroe","QB","SEA",13],[549,"Casey Washington","WR","CAR",13],[550,"Khalil Dinkins","TE","SF",13],[551,"Darius Cooper","WR","PHI",13],[552,"Tim Jones","WR","JAC",13],[553,"Blake Whiteheart","TE","CLE",13],[554,"Lew Nichols III","RB","PIT",13],[555,"Ian Thomas","TE","LV",13],[556,"Myles Price","WR","MIN",13],[557,"Gavin Bartholomew","TE","MIN",13],[558,"Will Mallory","TE","IND",13],[559,"Theo Wease Jr.","WR","LAC",13],[560,"Donovan Edwards","RB","FA",13],[561,"Hunter Long","TE","ARI",13],[562,"Kylen Granson","TE","TEN",13],[563,"Stone Smartt","TE","NO",13],[564,"Jaren Kanak","TE","TEN",13],[565,"Lan Larison","RB","NE",13],[566,"Davis Mills","QB","HOU",13],[567,"Craig Reynolds","RB","WAS",13],[568,"Laquon Treadwell","WR","IND",13],[569,"Dallen Bentley","TE","DEN",13],[570,"Quinn Ewers","QB","JAC",13],[571,"Colson Yankoff","TE","WAS",13],[572,"Bo Melton","WR","GB",13],[573,"Teagan Quitoriano","TE","ARI",13],[574,"Drake Dabney","TE","GB",13],[575,"Myles Montgomery","RB","FA",13],[576,"Tyson Bagent","QB","CHI",13],[577,"Noah Whittington","RB","HOU",13],[578,"Trey Lance","QB","LAC",13],[579,"Kevin Austin Jr.","WR","NO",13],[580,"Gardner Minshew II","QB","ARI",13],[581,"Tyrell Shavers","WR","BUF",13],[582,"Jake Briningstool","TE","KC",13],[583,"Brayden Willis","TE","SF",13],[584,"Quintin Morris","TE","JAC",13],[585,"Nick Kallerup","TE","SEA",13],[586,"Mason Tipton","WR","NO",13],[587,"Carter Runyon","TE","LV",13],[588,"Noah Brown","WR","FA",13],[589,"Kaleb Jackson","RB","FA",13],[590,"JuJu Smith-Schuster","WR","FA",13],[591,"Frank Gore Jr.","RB","BUF",13],[592,"David Sills V","WR","TB",13],[593,"CJ Donaldson","RB","NO",13],[594,"Kameron Johnson","WR","TB",13],[595,"CJ Dippre","TE","TB",13],[596,"Curtis Samuel","WR","FA",13],[597,"Arian Smith","WR","NYJ",13],[598,"Kendrick Law","WR","DET",13],[599,"Jake Browning","QB","FA",13],[600,"David Moore","WR","CAR",13],[601,"Miles Kitselman","TE","FA",13],[602,"Jermaine Burton","WR","FA",13],[603,"Mecole Hardman Jr.","WR","FA",13],[604,"Riley Nowakowski","TE","PIT",13],[605,"Tylan Wallace","WR","CLE",13],[606,"Alexander Mattison","RB","FA",13],[607,"Jack Westover","TE","WAS",13],[608,"Nikko Remigio","WR","KC",13],[609,"Cooper Rush","QB","ATL",13],[610,"Connor Heyward","TE","LV",13],[611,"Jamari Thrash","WR","CLE",13],[612,"Adam Prentice","RB","DEN",13],[613,"KhaDarel Hodge","WR","SF",13],[614,"Skyy Moore","WR","GB",13],[615,"Jack Endries","TE","CIN",13],[616,"DeeJay Dallas","RB","MIN",13],[617,"Pharaoh Brown","TE","IND",13],[618,"Chris Manhertz","TE","NYG",13],[619,"Andre Szmyt","K","CLE",13],[620,"Brandin Cooks","WR","FA",13],[621,"Josiah Deguara","TE","FA",13],[622,"Cam Akers","RB","FA",13],[623,"Michael Burton","RB","CLE",13],[624,"Ulysses Bentley IV","RB","FA",13],[625,"Ahmani Marshall","RB","CAR",13],[626,"Lucas Krull","TE","DEN",13],[627,"Ke'Shawn Williams","WR","CIN",13],[628,"Miles Davis","RB","FA",13],[629,"Devin Culp","TE","FA",13],[630,"Jordan Akins","TE","FA",13],[631,"Jason Sanders","K","FA",13],[632,"Harrison Bryant","TE","FA",13],[633,"Jermar Jefferson","RB","MIN",13],[634,"LaJohntay Wester","WR","BAL",13],[635,"Sterling Shepard","WR","FA",13],[636,"Desmond Reid","RB","FA",13],[637,"Jack Stoll","TE","FA",13],[638,"Montorie Foster Jr.","WR","SEA",13],[639,"Brevin Jordan","TE","HOU",14],[640,"James Mitchell","TE","DAL",14],[641,"Tip Reiman","TE","ARI",14],[642,"Braylon James","WR","FA",14],[643,"Noah Togiai","TE","FA",14],[644,"Ja'Quinden Jackson","RB","FA",14],[645,"Jeshaun Jones","WR","MIN",14],[646,"Zach Gentry","TE","FA",14],[647,"J. Michael Sturdivant","WR","GB",14],[648,"Peyton Hendershot","TE","FA",14],[649,"Ben Yurosek","TE","MIN",14],[650,"Diontae Johnson","WR","FA",14],[651,"Alex Bachman","WR","LAR",14],[652,"Michael Woods II","WR","DEN",14],[653,"Nick Vannett","TE","BAL",14],[654,"Matt Gay","K","LV",14],[655,"Trent Sherfield Sr.","WR","BUF",14],[656,"Jarrett Stidham","QB","DEN",14],[657,"Thomas Fidone II","TE","NYG",14],[658,"Michael Briscoe","WR","MIN",14],[659,"Ben Skowronek","WR","PIT",14],[660,"Riley Patterson","K","MIA",14],[661,"Spencer Rattler","QB","NO",14],[662,"Julian Hill","TE","NE",14],[663,"Drew Allar","QB","PIT",14],[664,"Dillon Gabriel","QB","CLE",14],[665,"Mitchell Trubisky","QB","TEN",14],[666,"Will Levis","QB","FA",14],[667,"Sam Howell","QB","DAL",14],[668,"Andy Dalton","QB","PHI",14],[669,"Kenny McIntosh","RB","FA",14],[670,"Michael Bandy","WR","DEN",14],[671,"Trayveon Williams","RB","FA",14],[672,"Tommy DeVito","QB","NE",14],[673,"Roman Hemby","RB","LV",14],[674,"Joshua Cephus","WR","FA",14],[675,"Mason Rudolph","QB","PIT",14],[676,"Deontay Burnett","WR","FA",14],[677,"Jashaun Corbin","RB","FA",14],[678,"Juice Wells Jr.","WR","FA",14],[679,"Jalin Hyatt","WR","NYG",14],[680,"Joshua Dobbs","QB","DET",14],[681,"Hayden Large","TE","CHI",14],[682,"Zack Moss","RB","FA",14],[683,"Malachi Corley","WR","CLE",14],[684,"Keleki Latu","TE","BUF",14],[685,"Velus Jones Jr.","WR","SEA",14],[686,"Michael Wortham","WR","JAC",14],[687,"Albert Okwuegbunam Jr.","TE","LV",14],[688,"Hendon Hooker","QB","TEN",14],[689,"Raheem Mostert","RB","LV",14],[690,"Garrett Nussmeier","QB","KC",14],[691,"Devin Duvernay","WR","ARI",14],[692,"Cole Payton","QB","PHI",14],[693,"Gary Brightwell","RB","FA",14],[694,"Case Keenum","QB","CHI",14],[695,"Zach Wilson","QB","NO",14],[696,"Emmanuel Henderson Jr.","WR","SEA",14],[697,"Dareke Young","WR","LV",14],[698,"Kurtis Rourke","QB","SF",14],[699,"Aidan O'Connell","QB","LV",14],[700,"Anthony Gould","WR","FA",14],[701,"Graham Mertz","QB","HOU",14],[702,"Dominic Lovett","WR","DET",14],[703,"Athan Kaliakmanis","QB","WAS",14],[704,"Tyrion Davis-Price","RB","FA",14],[705,"Behren Morton","QB","NE",14],[706,"Avery Williams","RB","FA",14],[707,"Cole Turner","TE","MIA",14],[708,"Ray-Ray McCloud III","WR","CHI",14],[709,"Julian Hicks","WR","SEA",14],[710,"Andrew Beck","RB","NYJ",14],[711,"D'Onta Foreman","RB","FA",14],[712,"Dare Ogunbowale","RB","LV",14],[713,"Coleman Owen","WR","IND",14],[714,"Max Brosmer","QB","MIN",14],[715,"Simi Fehoko","WR","ARI",14],[716,"Hassan Haskins","RB","NE",14],[717,"Xavier Weaver","WR","FA",14],[718,"Anthony Smith","WR","DAL",14],[719,"Dante Miller","RB","FA",14],[720,"CJ Williams","WR","JAC",14],[721,"Ryan Miller","WR","MIA",14],[722,"Trey Sermon","RB","ATL",14],[723,"Taysom Hill","TE","FA",14],[724,"D'Ernest Johnson","RB","FA",14],[725,"Montrell Johnson Jr.","RB","FA",14],[726,"Tyler Huntley","QB","BAL",14],[727,"Wendell Smallwood","RB","FA",14],[728,"Jonathan Williams","RB","FA",14],[729,"Trenton Irwin","WR","FA",14],[730,"Nick Bawden","RB","FA",14],[731,"Lewis Bond","WR","HOU",14],[732,"Pierre Strong Jr.","RB","GB",14],[733,"Dillon Johnson","RB","FA",14],[734,"Ko Kieft","TE","TB",14],[735,"Chase Edmonds","RB","WAS",14],[736,"Jalon Daniels","QB","TB",14],[737,"Kyle McCord","QB","MIA",14],[738,"Raheem Blackshear","RB","FA",14],[739,"Collin Hill","QB","FA",14],[740,"Samori Toure","WR","FA",14],[741,"Gunner Olszewski","WR","NYG",14],[742,"Carson Wentz","QB","MIN",14],[743,"Kenny Pickett","QB","CAR",14],[744,"Jonathan Ward","RB","BAL",14],[745,"Jack Strand","QB","ATL",14],[746,"Deven Thompkins","WR","LV",14],[747,"Marcus Yarns","RB","FA",14],[748,"Drew Lock","QB","SEA",14],[749,"Patrick Taylor Jr.","RB","FA",14],[750,"Jimmy Garoppolo","QB","LAR",14],[751,"Tanner McKee","QB","PHI",14],[752,"Kyle Allen","QB","BUF",14],[753,"Stetson Bennett IV","QB","LAR",14],[754,"Brady Cook","QB","FA",14],[755,"Jeff Caldwell","WR","KC",14],[756,"Chris Oladokun","QB","KC",14],[757,"Will Howard","QB","PIT",14],[758,"Joel Wilson","TE","TEN",14],[759,"Cash Jones","RB","ATL",14],[760,"Kyle Trask","QB","FA",14],[761,"Nick Mullens","QB","JAC",14],[762,"Tahj Washington","WR","FA",14],[763,"Austin Trammell","WR","JAC",14],[764,"Chip Trayanum","RB","NYJ",14],[765,"Britain Covey","WR","FA",14],[766,"Braxton Berrios","WR","NYG",14],[767,"Haynes King","QB","CAR",14],[768,"Dorian Thompson-Robinson","QB","FA",14],[769,"Joshua Simon","TE","WAS",14],[770,"Brandon Allen","QB","FA",14],[771,"Ty Pezza","TE","BAL",14],[772,"Charlie Jones","WR","NYG",14],[773,"Matt Barkley","QB","FA",14],[774,"Tyler Johnson","WR","FA",14],[775,"Devin Leary","QB","FA",14],[776,"Desmond Ridder","QB","FA",14],[777,"Jabari Small","RB","FA",14],[778,"Beaux Collins","WR","ATL",14],[779,"Jimmy Holiday","WR","KC",14],[780,"Matt Corral","QB","FA",14],[781,"British Brooks","RB","HOU",14],[782,"Ronnie Bell","WR","LV",14],[783,"Gage Larvadain","WR","FA",14],[784,"Bryson Nesbit","TE","MIN",14],[785,"Allen Lazard","WR","FA",15],[786,"Jaret Patterson","RB","FA",15],[787,"Seth Henigan","QB","FA",15],[788,"Sincere McCormick","RB","SF",15],[789,"John Michael Gyllenborg","TE","KC",15],[790,"Brett Rypien","QB","FA",15],[791,"Malik Taylor","WR","FA",15],[792,"Brandon Powell","WR","FA",15],[793,"Chris Moore","WR","BAL",15],[794,"Dylan Drummond","WR","ATL",15],[795,"Shedrick Jackson","WR","FA",15],[796,"Quez Watkins","WR","FA",15],[797,"Nick Nash","WR","FA",15],[798,"Quali Conley","RB","FA",15],[799,"Bisi Johnson","WR","FA",15],[800,"Brandon Smith","WR","PIT",15],[801,"Bryce Oliver","WR","CLE",15],[802,"Jackson Meeks","WR","DET",15],[803,"Byron Pringle","WR","FA",15],[804,"Tru Edwards","WR","FA",15],[805,"Tanner Arkin","TE","NE",15],[806,"Laviska Shenault Jr.","WR","FA",15],[807,"Dean Connors","RB","LAR",15],[808,"Princeton Fant","TE","DAL",15],[809,"Lake McRee","TE","PIT",15],[810,"Hayden Rucci","TE","JAC",15],[811,"Roc Taylor","WR","FA",15],[812,"David Martin-Robinson","TE","TEN",15],[813,"Kendall Milton","RB","CIN",15],[814,"Johnny Wilson","WR","PHI",15],[815,"Carson Steele","RB","PHI",15],[816,"Cameron Latu","TE","NE",15],[817,"Xavier Gipson","WR","FA",15],[818,"Thomas Gordon","TE","DET",15],[819,"Jordan Waters","RB","LAR",15],[820,"Tre Watson","TE","MIA",15],[821,"Carson Towt","TE","IND",15],[822,"Ainias Smith","WR","FA",15],[823,"DJ Rogers","TE","DAL",15],[824,"Israel Abanikanda","RB","DAL",15],[825,"Rakim Jarrett","WR","FA",15],[826,"Patrick Herbert","TE","LAC",15],[827,"Quentin Moore","TE","WAS",15],[828,"James Proche II","WR","FA",15],[829,"Mark Redman","TE","GB",15],[830,"E.J. Jenkins","TE","PHI",15],[831,"Jameson Geers","TE","ARI",15],[832,"Javon Baker","WR","FA",15],[833,"Trishton Jackson","WR","FA",15],[834,"Evan Svoboda","TE","LAC",15],[835,"Jaheim Bell","TE","FA",15],[836,"Messiah Swinson","TE","CLE",15],[837,"Van Jefferson","WR","FA",15],[838,"Cam Grandy","TE","MIN",15],[839,"Equanimeous St. Brown","WR","FA",15],[840,"Treyton Welch","TE","NO",15],[841,"Chris Myarick","TE","LV",15],[842,"Kentrel Bullock","RB","CIN",15],[843,"RJ Maryland","TE","GB",15],[844,"Nikola Kalinic","TE","CHI",15],[845,"Tanner Conner","TE","FA",15],[846,"Caleb Lohner","TE","DEN",15],[847,"Cody Schrader","RB","DEN",15],[848,"Justin Watson","WR","FA",15],[849,"Terion Stewart","RB","FA",15],[850,"Jacardia Wright","RB","SEA",15],[851,"Davon Booth","RB","IND",15],[852,"Coleman Bennett","RB","FA",15],[853,"Gus Edwards","RB","FA",15],[854,"Dominic Richardson","RB","FA",15],[855,"EJ Smith","RB","KC",15],[856,"Cedrick Wilson Jr.","WR","FA",15],[857,"Jamal Haynes","RB","FA",15],[858,"Chris Collier","RB","LV",15],[859,"Jeff Wilson Jr.","RB","FA",15],[860,"Eric Gray","RB","FA",15],[861,"Darrynton Evans","RB","FA",15],[862,"Gregory Desrosiers","RB","LAC",15],[863,"Royce Freeman","RB","FA",15],[864,"Clyde Edwards-Helaire","RB","FA",15],[865,"Isaiah Hodgins","WR","FA",15],[866,"JaMycal Hasty","RB","FA",15],[867,"Myles Gaskin","RB","FA",15],[868,"Camden Brown","WR","DAL",15],[869,"Sean McKeon","TE","IND",15],[870,"Gabe Davis","WR","FA",15],[871,"Ricky White III","WR","SEA",15],[872,"Vinny Anthony II","WR","ATL",15],[873,"Kendric Pryor","WR","FA",15],[874,"Logan Thomas","TE","FA",15],[875,"Ross Dwelley","TE","FA",15],[876,"Ryan Griffin","TE","FA",16],[877,"Anthony Firkser","TE","FA",16],[878,"Tucker Fisk","TE","FA",16],[879,"Geoff Swaim","TE","FA",16],[880,"Elijah Mitchell","RB","FA",16],[881,"Jesper Horsted","TE","FA",16],[882,"Michael Jacobson","TE","FA",16],[883,"Brycen Hopkins","TE","FA",16],[884,"Curtis Hodges","TE","FA",16],[885,"Bub Means","WR","FA",16],[886,"Gerald Everett","TE","FA",16],[887,"Kenny Yeboah","TE","FA",16],[888,"Luke Lachey","TE","FA",16],[889,"Mitchell Wilcox","TE","FA",16],[890,"Carlos Washington Jr.","RB","FA",16],[891,"Nick Boyle","TE","FA",16],[892,"Ross Travis","TE","FA",16],[893,"Zay Jones","WR","FA",16],[894,"Deuce Vaughn","RB","FA",16],[895,"Jason Brownlee","WR","FA",16],[896,"Anthony McFarland Jr.","RB","FA",16],[897,"Tejhaun Palmer","WR","FA",16],[898,"Jordan Mims","RB","FA",16],[899,"Graig Cooper","RB","FA",16],[900,"Jase McClellan","RB","FA",16],[901,"Blake Watson","RB","FA",16],[902,"Kevin Harris","RB","FA",16],[903,"Kaden Prather","WR","FA",16],[904,"Danny Gray","WR","PHI",16],[905,"Trey Palmer","WR","NO",16],[906,"Josh Reynolds","WR","FA",16],[907,"Omarius Hines","WR","FA",16],[908,"Dale Moss","WR","FA",16],[909,"John Hurst","WR","FA",16],[910,"Russell Gage Jr.","WR","FA",16],[911,"Nelson Agholor","WR","FA",16],[912,"DeAndre Carter","WR","FA",16],[913,"Marquez Callaway","WR","FA",16],[914,"Dee Eskridge","WR","FA",16],[915,"Anthony Schwartz","WR","FA",16],[916,"Cody Thompson","WR","FA",16],[917,"Daurice Fountain","WR","FA",16],[918,"Hunter Renfrow","WR","FA",16],[919,"Isaiah McKenzie","WR","FA",16],[920,"Jalen Guyton","WR","FA",16],[921,"Justin Shorter","WR","LV",16],[922,"Zach Pascal","WR","FA",16]];
+const ADP=[[1.5,"Jahmyr Gibbs","RB","DET",389],[2.2,"Bijan Robinson","RB","ATL",388],[3.5,"Ja'Marr Chase","WR","CIN",325],[4.8,"Christian McCaffrey","RB","SF",336],[5.4,"Jonathan Taylor","RB","IND",337],[6.9,"Puka Nacua","WR","LAR",332],[7.0,"Amon-Ra St. Brown","WR","DET",291],[8.4,"Jaxon Smith-Njigba","WR","SEA",304],[9.0,"James Cook III","RB","BUF",322],[10.2,"Saquon Barkley","RB","PHI",303],[11.9,"CeeDee Lamb","WR","DAL",286],[12.2,"Justin Jefferson","WR","MIN",265],[13.9,"De'Von Achane","RB","MIA",309],[14.9,"Ashton Jeanty","RB","LV",281],[15.2,"Derrick Henry","RB","BAL",315],[16.3,"Omarion Hampton","RB","LAC",288],[17.8,"Chase Brown","RB","CIN",295],[17.8,"Kenneth Walker III","RB","KC",297],[19.5,"A.J. Brown","WR","NE",267],[20.3,"Josh Allen","QB","BUF",388],[21.1,"Drake London","WR","ATL",263],[22.5,"Nico Collins","WR","HOU",284],[23.6,"Brock Bowers","TE","LV",257],[24.3,"Kyren Williams","RB","LAR",252],[25.6,"George Pickens","WR","DAL",267],[26.3,"Jeremiyah Love","RB","ARI",251],[26.5,"Trey McBride","TE","ARI",235],[28.5,"Malik Nabers","WR","NYG",250],[29.2,"Rashee Rice","WR","KC",235],[30.9,"Chris Olave","WR","NO",250],[31.8,"Breece Hall","RB","NYJ",258],[32.1,"Javonte Williams","RB","DAL",257],[33.2,"DeVonta Smith","WR","PHI",243],[34.7,"Lamar Jackson","QB","BAL",359],[35.2,"Ladd McConkey","WR","LAC",240],[35.8,"Tetairoa McMillan","WR","CAR",239],[37.5,"Cam Skattebo","RB","NYG",240],[38.7,"Josh Jacobs","RB","GB",105],[39.5,"Tee Higgins","WR","CIN",240],[40.2,"Travis Etienne Jr.","RB","NO",252],[41.3,"Emeka Egbuka","WR","TB",238],[42.8,"Zay Flowers","WR","BAL",244],[43.7,"Colston Loveland","TE","CHI",221],[44.0,"David Montgomery","RB","HOU",251],[44.9,"Garrett Wilson","WR","NYJ",236],[46.6,"Jaylen Waddle","WR","DEN",234],[47.3,"Bucky Irving","RB","TB",238],[48.7,"D'Andre Swift","RB","CHI",252],[49.4,"Quinshon Judkins","RB","CLE",242],[50.3,"Tyler Warren","TE","IND",204],[51.0,"Drake Maye","QB","NE",342],[52.9,"DJ Moore","WR","BUF",192],[53.7,"Terry McLaurin","WR","WAS",229],[53.9,"Joe Burrow","QB","CIN",313],[55.8,"Davante Adams","WR","LAR",201],[56.9,"TreVeyon Henderson","RB","NE",205],[57.4,"Jadarian Price","RB","SEA",213],[58.2,"Jameson Williams","WR","DET",228],[59.4,"Bhayshul Tuten","RB","JAX",210],[60.6,"Luther Burden III","WR","CHI",221],[61.8,"Jalen Hurts","QB","PHI",336],[62.1,"Mike Evans","WR","SF",238],[62.7,"Rome Odunze","WR","CHI",223],[64.5,"Sam LaPorta","TE","DET",201],[65.9,"Christian Watson","WR","GB",227],[66.4,"Tucker Kraft","TE","GB",180],[67.5,"Jaylen Warren","RB","PIT",204],[68.1,"Carnell Tate","WR","TEN",186],[69.9,"Jayden Daniels","QB","WAS",343],[70.0,"Parker Washington","WR","JAX",225],[71.6,"Rhamondre Stevenson","RB","NE",205],[71.7,"Kyle Pitts Sr.","TE","ATL",176],[73.9,"Marvin Harrison Jr.","WR","ARI",199],[74.2,"Caleb Williams","QB","CHI",318],[75.3,"Brian Thomas Jr.","WR","JAX",210],[76.4,"Harold Fannin Jr.","TE","CLE",182],[77.0,"DK Metcalf","WR","PIT",195],[78.1,"Tony Pollard","RB","TEN",195],[79.3,"Chuba Hubbard","RB","CAR",183],[80.2,"Justin Herbert","QB","LAC",312],[80.2,"Courtland Sutton","WR","DEN",184],[82.4,"RJ Harvey","RB","DEN",165],[83.2,"Rico Dowdle","RB","PIT",190],[84.7,"George Kittle","TE","SF",174],[85.1,"J.K. Dobbins","RB","DEN",193],[86.1,"Dak Prescott","QB","DAL",311],[87.0,"Jonathon Brooks","RB","CAR",184],[88.6,"Makai Lemon","WR","PHI",178],[89.4,"Michael Wilson","WR","ARI",175],[90.0,"Chris Godwin Jr.","WR","TB",177],[91.5,"Dalton Kincaid","TE","BUF",167],[92.3,"Blake Corum","RB","LAR",171],[93.7,"Travis Kelce","TE","KC",172],[94.0,"Alec Pierce","WR","IND",195],[95.2,"Jordan Mason","RB","MIN",191],[96.6,"Kyle Monangai","RB","CHI",189],[98.1,"Jacory Croskey-Merritt","RB","WAS",156],[98.2,"Trevor Lawrence","QB","JAX",320],[100.4,"Jordan Addison","WR","MIN",183],[101.3,"Jayden Reed","WR","GB",209],[102.6,"Quentin Johnston","WR","LAC",173],[103.4,"Michael Pittman Jr.","WR","PIT",175],[104.6,"Jaxson Dart","QB","NYG",323],[106.9,"Matthew Stafford","QB","LAR",281],[107.4,"Kenny Gainwell","RB","TB",167],[108.0,"Isaiah Likely","TE","NYG",159],[109.7,"Jordyn Tyson","WR","NO",117],[110.8,"Stefon Diggs","WR","WAS",160],[111.9,"KC Concepcion","WR","CLE",166],[112.2,"Josh Downs","WR","IND",176],[113.7,"Jake Ferguson","TE","DAL",156],[115.0,"Patrick Mahomes II","QB","KC",297],[116.4,"De'Zhaun Stribling","WR","SF",135],[116.9,"Aaron Jones Sr.","RB","MIN",161],[118.3,"Bo Nix","QB","DEN",312],[119.7,"Matthew Golden","WR","GB",182],[120.6,"Wan'Dale Robinson","WR","TEN",173],[122.9,"Mark Andrews","TE","BAL",166],[123.1,"Rachaad White","RB","WAS",147],[124.4,"Dallas Goedert","TE","PHI",139],[125.4,"Brock Purdy","QB","SF",315],[125.8,"Chris Rodriguez Jr.","RB","JAX",167],[127.4,"Xavier Worthy","WR","KC",173],[128.4,"Romeo Doubs","WR","NE",170],[130.9,"Tyler Allgeier","RB","ARI",99],[131.2,"Deebo Samuel Sr.","WR","SF",164],[132.5,"Jakobi Meyers","WR","JAX",175],[136.4,"MarShawn Lloyd","RB","GB",184],[137.0,"Mike Washington Jr.","RB","LV",118],[141.9,"Woody Marks","RB","HOU",99],[142.7,"Zach Charbonnet","RB","SEA",79],[143.4,"Ja'Kobi Lane","WR","BAL",110],[143.5,"Jared Goff","QB","DET",286],[145.5,"Jalen Coker","WR","CAR",174],[147.9,"Jonah Coleman","RB","DEN",78],[148.5,"Hunter Henry","TE","NE",157],[149.2,"Kyler Murray","QB","MIN",308],[150.8,"Rashid Shaheed","WR","SEA",151],[152.1,"Tyrone Tracy Jr.","RB","NYG",135],[152.6,"Khalil Shakir","WR","BUF",173],[155.6,"Baker Mayfield","QB","TB",290],[159.5,"Alvin Kamara","RB","NO",70],[161.2,"Kaelon Black","RB","SF",51],[161.6,"Juwan Johnson","TE","NO",143],[163.0,"Tank Bigsby","RB","PHI",82],[164.8,"Jordan Love","QB","GB",289],[165.7,"Keaton Mitchell","RB","LAC",116],[167.1,"Jalen Nailor","WR","LV",138],[168.6,"Tyjae Spears","RB","TEN",129],[170.2,"Denzel Boston","WR","CLE",140],[170.3,"Brenton Strange","TE","JAX",164],[172.4,"Oronde Gadsden II","TE","LAC",145],[174.1,"Brian Robinson Jr.","RB","ATL",86]];const PRELOAD=[[9,"CeeDee Lamb","WR","DAL",1],[10,"Justin Jefferson","WR","MIN",2],[11,"James Cook III","RB","BUF",2],[14,"Chase Brown","RB","CIN",2],[19,"Omarion Hampton","RB","LAC",2],[22,"Derrick Henry","RB","BAL",2],[32,"Tetairoa McMillan","WR","CAR",3],[38,"Lamar Jackson","QB","BAL",3],[42,"Emeka Egbuka","WR","TB",3],[54,"Quinshon Judkins","RB","CLE",4],[55,"Bucky Irving","RB","TB",4],[67,"Parker Washington","WR","JAC",5],[70,"Marvin Harrison Jr.","WR","ARI",5],[78,"Sam LaPorta","TE","DET",5],[106,"Kenny Gainwell","RB","TB",6],[107,"Jordan Mason","RB","MIN",6],[118,"Isaiah Likely","TE","NYG",6]];
+
+const DRAFT_URL='https://sleeper.com/draft/nfl/1382082388703608832';
+const DRAFT_ID=(DRAFT_URL.match(/(\d{10,25})/)||[])[1]||'';
+const S={draftId:DRAFT_ID,slot:10,teams:12,rounds:13,spread:.24,needw:1,
+         tabL:'ecr',tabR:'intel',ecrPos:'ALL',sheet:[],follow:true,
+         targets:[],picks:[],live:false,timer:null,busy:false,fails:0};
+const $=id=>document.getElementById(id);
+const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[.'`’-]/g,'').replace(/\b(jr|sr|ii|iii|iv)\b/g,'').replace(/\s+/g,' ').trim();
+
+const BYKEY={}; POOL.forEach(p=>BYKEY[norm(p[1])]={rk:p[0],name:p[1],pos:p[2],team:p[3],tier:p[4]});
+
+/* ============ normal-tail base hazard ============ */
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  return s*y;}
+const Phi=z=>.5*(1+erf(z/Math.SQRT2));
+const surv=(n,mu,sd)=>1-Phi((n-.5-mu)/sd);
+const sdOf=a=>Math.max(4,S.spread*a+2);
+
+/* ============ draft geometry ============ */
+const roundOf=p=>Math.ceil(p/S.teams);
+const slotOf=p=>{const i=(p-1)%S.teams;return roundOf(p)%2?i+1:S.teams-i;};
+S.slotName={1:'Alex',2:'Dennis',3:'Jethy',4:'Noah',5:'Sean',6:'Dave',
+  7:'Patrick',8:'Jake',9:'Jared',10:'ME',11:'Ian',12:'Andre'};
+function teamName(sl){return S.slotName[sl]||('Slot '+sl);}
+function teamShort(sl){const n=S.slotName[sl];return n?(n.length>14?n.slice(0,13)+'\u2026':n):('Slot '+sl);}
+function pickLabel(no){return fmt(no)+' \u00b7 '+teamName(slotOf(no));}
+async function loadTeams(){
+  try{
+    const r=await fetch(`https://api.sleeper.app/v1/draft/${S.draftId}`);
+    if(!r.ok)return;
+    const d=await r.json();
+    const order=d.draft_order||{}, byUser={};
+    if(d.league_id){
+      try{
+        const ur=await fetch(`https://api.sleeper.app/v1/league/${d.league_id}/users`);
+        if(ur.ok)(await ur.json()).forEach(u=>{
+          byUser[u.user_id]=(u.metadata&&u.metadata.team_name)||u.display_name||'';});
+      }catch(e){}
+    }
+    const map={};
+    Object.keys(order).forEach(uid=>{map[order[uid]]=byUser[uid]||('Team '+order[uid]);});
+    /* names are fixed above — Sleeper's draft order does not override them */
+  }catch(e){}
+}
+function myPicks(){const o=[];for(let r=1;r<=S.rounds;r++)o.push((r-1)*S.teams+(r%2?S.slot:S.teams-S.slot+1));return o;}
+const curPick=()=>S.picks.length+1;
+const nextMine=()=>myPicks().find(p=>p>=curPick())||null;
+const fmt=p=>roundOf(p)+'.'+String(slotOf(p)).padStart(2,'0');
+
+/* ============ roster reconstruction ============ */
+function rosters(){
+  const R={};
+  for(let s=1;s<=S.teams;s++)R[s]={QB:0,RB:0,WR:0,TE:0,K:0,DEF:0,n:0};
+  S.picks.forEach(p=>{const s=slotOf(p.no);if(!R[s])return;
+    if(R[s][p.pos]!==undefined)R[s][p.pos]++; R[s].n++;});
+  return R;
+}
+/* how badly team `c` wants position `pos` in round `rnd` */
+function needMult(c,pos,rnd){
+  if(pos==='QB'){if(c.QB>=2)return .05;if(c.QB>=1)return .12;
+    return rnd<=3?.55:rnd<=6?1.25:rnd<=9?1.8:1.5;}
+  if(pos==='TE'){if(c.TE>=2)return .05;if(c.TE>=1)return .15;
+    return rnd<=3?.8:rnd<=6?1.35:rnd<=9?1.8:1.6;}
+  if(pos==='RB')return c.RB===0?1.55:c.RB===1?1.3:c.RB===2?1.05:c.RB===3?.75:c.RB===4?.5:.3;
+  if(pos==='WR')return c.WR===0?1.5:c.WR===1?1.3:c.WR===2?1.05:c.WR===3?.85:c.WR===4?.55:.35;
+  if(pos==='K'||pos==='DEF')return rnd>=12?1.3:.02;
+  return 1;
+}
+const SHARE={QB:.10,RB:.32,WR:.38,TE:.10,K:.05,DEF:.05};
+/* need multiplier normalised so total draft speed stays constant */
+function relNeed(c,pos,rnd){
+  let avg=0;for(const k in SHARE)avg+=SHARE[k]*needMult(c,k,rnd);
+  const rel=needMult(c,pos,rnd)/(avg||1);
+  return 1+S.needw*(Math.min(Math.max(rel,.15),3)-1);
+}
+
+/* league-wide squeeze: only QB and TE, where every team wants exactly one */
+function squeezeInfo(pos){
+  const R=rosters(),gone=new Set(S.picks.map(k=>k.key)),C=curPick();
+  let nd=0;for(let s=1;s<=S.teams;s++)if(R[s][pos]===0)nd++;
+  const sup=POOL.filter(p=>p[2]===pos&&!gone.has(norm(p[1]))&&p[0]<=C+45).length;
+  // nobody is shopping for a QB in round 1 — ramp the squeeze in from round 4
+  const ramp=Math.min(Math.max((roundOf(C)-3)/3,0),1);
+  const base=Math.min(Math.max(.65+.5*(nd/Math.max(sup,1)),.75),2);
+  return{need:nd,supply:sup,ramp,mult:1+S.needw*ramp*(base-1)};
+}
+const squeeze=pos=>(pos==='QB'||pos==='TE')?squeezeInfo(pos).mult:1;
+
+/* ============ survival with live roster needs ============ */
+function survive(p,C,N,useNeed){
+  if(N<=C)return 1;
+  const a=p.adp,sd=sdOf(a),R=rosters();
+  const sq=useNeed?squeeze(p.pos):1;
+  let H=0;
+  for(let n=C;n<N;n++){
+    const s0=Math.max(surv(n,a,sd),1e-12),s1=Math.max(surv(n+1,a,sd),1e-12);
+    let h=Math.min(Math.max(-Math.log(s1/s0),.001),.45);
+    if(useNeed){const c=R[slotOf(n)];if(c)h*=relNeed(c,p.pos,roundOf(n))*sq;}
+    H+=Math.min(h,.7);
+  }
+  return Math.exp(-H);
+}
+const taken=p=>S.picks.some(k=>k.key===p.key);
+const pct=x=>Math.round(x*100);
+const color=x=>x>=.7?'var(--safe)':x>=.4?'var(--warn)':'var(--gone)';
+
+/* ============ radial gauge ============ */
+const GA0=Math.PI, GA1=Math.PI*2, GCX=62, GCY=64, GR=44;
+const gpt=(a,r)=>[(GCX+Math.cos(a)*r).toFixed(2),(GCY+Math.sin(a)*r).toFixed(2)];
+function garc(a0,a1,r){const[x0,y0]=gpt(a0,r),[x1,y1]=gpt(a1,r);
+  return `M${x0} ${y0} A${r} ${r} 0 ${a1-a0>Math.PI?1:0} 1 ${x1} ${y1}`;}
+function gauge(s,dead){
+  const v=Math.max(0,Math.min(1,s||0)), c=dead?'var(--mute)':color(v);
+  const segs=[['var(--gone)',0,.4],['var(--warn)',.4,.7],['var(--safe)',.7,1]];
+  let arcs=segs.map(([col,a,b])=>`<path d="${garc(GA0+(GA1-GA0)*a,GA0+(GA1-GA0)*b,GR)}" `+
+    `stroke="${col}" stroke-width="9" fill="none" opacity="${dead?.18:.72}"/>`).join('');
+  let ticks='';
+  for(let i=0;i<=10;i++){const a=GA0+(GA1-GA0)*i/10,p1=gpt(a,GR+6),p2=gpt(a,GR+9.5);
+    ticks+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#E8EEF5" stroke-opacity="${dead?.12:.3}" stroke-width="1"/>`;}
+  const na=GA0+(GA1-GA0)*v, tail=gpt(na+Math.PI,GR*0.17), tip=gpt(na,GR*0.88);
+  const needle=dead?'':
+    `<line x1="${tail[0]}" y1="${tail[1]}" x2="${tip[0]}" y2="${tip[1]}" stroke="${c}" stroke-width="7" stroke-linecap="round" opacity=".22"/>`+
+    `<line x1="${tail[0]}" y1="${tail[1]}" x2="${tip[0]}" y2="${tip[1]}" stroke="#E8EEF5" stroke-width="2.6" stroke-linecap="round"/>`+
+    `<circle cx="${GCX}" cy="${GCY}" r="5" fill="#E8EEF5"/><circle cx="${GCX}" cy="${GCY}" r="2.4" fill="${c}"/>`;
+  const label=dead?`<text class="gv" x="${GCX}" y="56" fill="var(--mute)" text-anchor="middle">&#8212;</text>`
+    :`<text class="gv" x="${GCX}" y="56" fill="${c}" text-anchor="middle">${pct(v)}<tspan class="gu">%</tspan></text>`;
+  return `<svg class="gauge" viewBox="0 0 124 86" role="img" aria-label="${dead?'off the board':pct(v)+' percent chance he is there'}">`+
+    arcs+ticks+needle+label+`</svg>`;
+}
+
+/* ---- donut ring: % chance he is still there ---- */
+const DR=16, DC=2*Math.PI*DR;
+let DUID=0;
+function dcol(n){return n<=10?['#ff4d4d','#ff7a5c']:n<=30?['#ff8c2b','#ffab4d']
+  :n<=60?['#ffd23f','#ffe07a']:['#2fd67f','#6bf0b0'];}
+function donut(v,dead){
+  const x=Math.max(0,Math.min(1,v||0)), id='dg'+(DUID++), CL=dcol(pct(x));
+  if(dead)return `<svg class="donut" viewBox="0 0 44 44" role="img" aria-label="off the board">
+    <circle cx="22" cy="22" r="${DR}" fill="none" stroke="#ffffff14" stroke-width="5.4"/>
+    <text class="dv" x="22" y="26" text-anchor="middle" fill="var(--mute)">&#8212;</text></svg>`;
+  const ang=(-90+360*x)*Math.PI/180, dx=(22+Math.cos(ang)*DR).toFixed(2), dy=(22+Math.sin(ang)*DR).toFixed(2);
+  return `<svg class="donut" viewBox="0 0 44 44" role="img" aria-label="${pct(x)} percent chance he is there">
+    <defs><linearGradient id="${id}" x1="6" y1="6" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="${CL[0]}"/><stop offset="1" stop-color="${CL[1]}"/></linearGradient></defs>
+    <circle cx="22" cy="22" r="${DR}" fill="none" stroke="#ffffff14" stroke-width="5.4"/>
+    <circle cx="22" cy="22" r="${DR}" fill="none" stroke="url(#${id})" stroke-width="5.4" stroke-linecap="round"
+      stroke-dasharray="${(DC*Math.max(0.004,x)).toFixed(2)} ${DC.toFixed(2)}" transform="rotate(-90 22 22)"/>
+    <circle cx="${dx}" cy="${dy}" r="1.5" fill="#fff"/>
+    <text class="dv" x="22" y="26" text-anchor="middle" fill="${CL[0]}">${pct(x)}<tspan class="du">%</tspan></text></svg>`;
+}
+
+/* ============ best available (live ECR) ============ */
+function drawECR(){
+  const gone=new Set(S.picks.map(k=>k.key)),C=curPick(),N=nextMine();
+  const inQ=new Set(S.targets.map(t=>t.key));
+  const fp=S.ecrPos||'ALL';
+  const avail=POOL.filter(p=>!gone.has(norm(p[1]))&&(fp==='ALL'||p[2]===fp));
+  const html=avail.slice(0,140).map((p,i)=>{
+    const k=norm(p[1]),q=inQ.has(k);
+    const t=q?S.targets.find(x=>x.key===k):{adp:p[0],pos:p[2],key:k};
+    const s=N?survive(t,C,N,true):0;
+    return `<div class="ecr ${q?'q':''}" data-k="${k}" data-n="${p[1]}" title="${q?'Click to drop from queue':'Click to add to queue'}">
+      <div class="rk">${i+1}</div>
+      <div><div class="en">${p[1]}${q?'<span class="star">&#9733;</span>':''}</div>
+        <div class="em"><span class="pos ${p[2]}">${p[2]}</span>${p[3]} · ECR ${p[0]} · tier ${p[4]}</div></div>
+      <div style="text-align:center">${donut(s,!N)}
+        <div class="em" style="text-align:center;margin-top:1px">at ${N?fmt(N):'—'}</div></div></div>`;
+  }).join('');
+  $('ecrlist').innerHTML=html||`<div class="empty">No ${fp==='ALL'?'players':fp+'s'} left in the top 260.</div>`;
+  document.querySelectorAll('#ecrlist .ecr').forEach(el=>el.onclick=()=>{
+    const k=el.dataset.k,i=S.targets.findIndex(t=>t.key===k);
+    if(i>=0)S.targets.splice(i,1);else S.targets.push(mkTarget(el.dataset.n));
+    render();
+  });
+}
+
+/* ============ full draft board ============ */
+function drawGrid(){
+  const byNo={};S.picks.forEach(p=>byNo[p.no]=p);
+  const inQ=new Set(S.targets.map(t=>t.key));
+  const C=curPick(),curR=roundOf(C),mine=myPicks();
+  const g=$('dgrid');
+  const wide=document.body.classList.contains('wideboard');
+  // wide mode: columns share the pane exactly, so there is nothing to scroll sideways
+  g.style.gridTemplateColumns=wide?`30px repeat(${S.teams},minmax(0,1fr))`
+                                  :`30px repeat(${S.teams},74px)`;
+  let h='<div class="gh corner"></div>';
+  for(let s=1;s<=S.teams;s++)
+    h+=`<div class="gh ${s===S.slot?'me':(s===11||s===12)?'riv':''}" title="${teamName(s)}">${teamShort(s)}</div>`;
+  for(let r=1;r<=S.rounds;r++){
+    h+=`<div class="rlab ${r===curR?'now':''}" data-r="${r}">R${r}</div>`;
+    for(let s=1;s<=S.teams;s++){
+      const no=(r-1)*S.teams+(r%2?s:S.teams-s+1);
+      const p=byNo[no],me=s===S.slot,riv=(s===11||s===12);
+      const tgt=p&&inQ.has(p.key);
+      h+=`<div class="gc ${p?'':'empty'} ${p&&p.pos?'pos-'+p.pos:''} ${me?'me':''} ${riv&&!me?'riv':''} ${tgt?'tgt':''} ${no===C?'now':''}"
+        data-r="${r}" title="${fmt(no)} · pick ${no}${p?' · '+p.name:''}">
+        ${p?`<div class="gn">${p.name.split(' ').slice(-1)[0]}</div>
+            <div class="gp">${p.pos||''} ${p.team||''}</div>`
+           :`<div class="gp">${no}</div>`}</div>`;
+    }
+  }
+  g.innerHTML=h;
+  $('gwhere').textContent=C>S.teams*S.rounds?'Draft complete'
+    :`Round ${curR} · pick ${fmt(C)}${mine.includes(C)?' — yours':''}`;
+  if(S.follow!==false&&S.tabR==='board')pinToNow(false);
+}
+
+function scrollToRound(r,smooth){
+  const w=$('gridwrap');if(!w||!w.querySelector)return;
+  const cell=w.querySelector(`.rlab[data-r="${r}"]`);if(!cell)return;
+  S._auto=true;
+  w.scrollTo({top:Math.max(0,cell.offsetTop-w.clientHeight/2+cell.offsetHeight/2),
+              behavior:smooth?'smooth':'auto'});
+  clearTimeout(S._autoT);
+  S._autoT=setTimeout(()=>{S._auto=false;},900);
+}
+function setFollow(on){
+  S.follow=on;$('followBtn').classList.toggle('on',on);
+  $('followBtn').textContent=on?'Following live':'Follow off';
+  if(on)pinToNow(true,true);
+}
+
+/* ============ your roster (middle column) ============ */
+const LINEUP=[['QB',['QB']],['RB',['RB']],['RB',['RB']],['WR',['WR']],['WR',['WR']],
+              ['TE',['TE']],['FLEX',['RB','WR','TE']],['FLEX',['RB','WR','TE']]];
+function drawTeam(){
+  const my=S.picks.filter(p=>slotOf(p.no)===S.slot).sort((a,b)=>a.no-b.no);
+  const slots=LINEUP.map(l=>({lab:l[0],ok:l[1],p:null})),bench=[];
+  my.forEach(p=>{
+    const s=slots.find(s=>!s.p&&s.ok.includes(p.pos));
+    if(s)s.p=p;else bench.push(p);
+  });
+  const benchMax=Math.max(0,S.rounds-LINEUP.length);
+  const POSC={QB:'#FF5C5C',RB:'#3DD68C',WR:'#4D8DFF',TE:'#FF9430',K:'#A9BCCF',DEF:'#8FA3B8'};
+  const cell=(lab,p,cls)=>`<div class="slot ${p?'':'open'} ${cls||''}">
+      <span class="sbar" style="background:${p?(POSC[p.pos]||'#2b3545'):'#2b3545'}"></span>
+      <span class="snum" style="${p?`background:${POSC[p.pos]||'#2b3545'}`:''}">${lab}</span>
+      <span class="sbody">${p?`<span class="slotnm">${p.name}</span>
+        <span class="slotpick">${p.pos||''}${p.team?' · '+p.team:''} · ${fmt(p.no)} · #${p.no}</span>`
+        :`<span class="sk"><i style="width:${54+(lab.length*9)%40}%"></i><i style="width:${30+(lab.length*13)%34}%"></i></span>`}</span>
+      <span class="sdot"><i></i><i></i><i></i></span></div>`;
+  let h=slots.map(s=>cell(s.lab,s.p)).join('');
+  h+=`<div style="height:9px"></div>`;
+  for(let i=0;i<benchMax;i++)h+=cell('BN'+(i+1),bench[i]||null,'bench');
+  $('myteam').innerHTML=h;
+  $('tcnt').textContent=`${my.length} of ${S.rounds} picked`;
+}
+
+/* ============ suggested picks (round strategy) ============ */
+function sugPlan(){
+  const my=S.picks.filter(p=>slotOf(p.no)===S.slot);
+  const n=p=>my.filter(x=>x.pos===p).length;
+  const rnd=Math.min(S.rounds,roundOf(nextMine()||curPick()));
+  const gone=new Set(S.picks.map(p=>p.key));
+  const avail=p=>POOL.filter(x=>!gone.has(norm(x[1]))&&(!p||p.includes(x[2])));
+  const PLAN={1:'RB',2:'RB',3:'WR',4:'TE',5:'WR',6:'WR',7:'RB',8:'RB',9:'QB'};
+  const target=PLAN[rnd];
+  let want,why;
+  if(target){
+    want=[target];
+    why=`Round ${rnd} \u2014 your plan calls for ${target} here.`;
+    if(avail(want).length===0){
+      want=['RB','WR','TE','QB'];
+      why=`Round ${rnd} \u2014 no ${target} left, taking best available.`;
+    }
+  }else{
+    want=null;
+    why=`Round ${rnd} \u2014 plan is done. Best sleepers, then best available.`;
+  }
+  let picks;
+  if(want){
+    picks=avail(want).sort((a,b)=>a[0]-b[0]);
+    if(picks.length<3)picks=picks.concat(avail(null).sort((a,b)=>a[0]-b[0]));
+  }else{
+    const sl=(typeof SLP!=='undefined'?SLP:[]).filter(x=>!gone.has(x.key));
+    picks=sl.map(x=>[x.adp||999,x.name,x.pos||'',x.team||'',x.tier||0])
+            .sort((a,b)=>a[0]-b[0]);
+    if(picks.length<3)picks=picks.concat(avail(null).sort((a,b)=>a[0]-b[0]));
+  }
+  return {rnd,why,picks:picks.slice(0,3),want};
+}
+function drawSug(){
+  const el=$('suglist');if(!el)return;
+  const {rnd,why,picks}=sugPlan();
+  const N=nextMine(),C=curPick(),inQ=new Set(S.targets.map(t=>t.key));
+  let h=`<div class="card" style="padding:11px;margin-bottom:9px">
+    <div class="subtabs" style="margin:0 0 6px"><span class="subtab on">Round ${rnd}</span></div>
+    <p class="hint" style="margin:0">${why}</p></div>`;
+  h+=picks.length?picks.map((p,i)=>{
+    const k=norm(p[1]),q=inQ.has(k);
+    const t=q?S.targets.find(x=>x.key===k):{adp:p[0],pos:p[2],key:k};
+    const s=N?survive(t,C,N,true):0;
+    return `<div class="ecr ${q?'q':''}" data-k="${k}" data-n="${p[1]}" title="${q?'Click to drop from queue':'Click to add to queue'}">
+      <div class="rk">${i+1}</div>
+      <div><div class="en">${p[1]}${q?'<span class="star">&#9733;</span>':''}</div>
+        <div class="em"><span class="pos ${p[2]}">${p[2]||'—'}</span>${p[3]||''}${p[0]&&p[0]!==999?' · ECR '+p[0]:''}${p[4]?' · tier '+p[4]:''}</div></div>
+      <div style="text-align:center">${donut(s,!N)}
+        <div class="em" style="text-align:center;margin-top:1px">at ${N?fmt(N):'—'}</div></div></div>`;
+  }).join(''):'<div class="empty">Nothing left that fits this round.</div>';
+  el.innerHTML=h;
+  document.querySelectorAll('#suglist .ecr').forEach(x=>x.onclick=()=>{
+    const k=x.dataset.k,i=S.targets.findIndex(t=>t.key===k);
+    if(i>=0)S.targets.splice(i,1);else S.targets.push(mkTarget(x.dataset.n));
+    render();
+  });
+}
+
+/* ============ intel + rivals ============ */
+function gapSlots(){const C=curPick(),N=nextMine();if(!N)return [];
+  const o=[];for(let n=C;n<N;n++)o.push(slotOf(n));return o;}
+
+function drawIntel(){
+  const R=rosters(),C=curPick(),rnd=roundOf(C);
+  let qb=0,te=0;for(let s=1;s<=S.teams;s++){if(R[s].QB)qb++;if(R[s].TE)te++;}
+  const gs=gapSlots(),uniq=[...new Set(gs)];
+  const needRB=uniq.filter(s=>R[s].RB<2).length, needWR=uniq.filter(s=>R[s].WR<2).length;
+  const box=(n,l,s,c)=>`<div class="ibox"><div class="n" style="color:${c||'var(--ink)'}">${n}</div>
+    <div class="l">${l}</div><div class="s">${s}</div></div>`;
+  const qi=squeezeInfo('QB'),ti=squeezeInfo('TE');
+  const sq=(o,lab,have)=>box(`${have}<span style="font-size:15px;opacity:.5">/${S.teams}</span>`,lab,
+      o.ramp>0&&o.mult>=1.2?`Squeeze ×${o.mult.toFixed(2)} — ${o.need} chasing ${o.supply}`
+                  :`${o.need} still need one`,
+      o.ramp>0&&o.mult>=1.2?'var(--warn)':null);
+  $('intel').innerHTML=
+    sq(qi,'Teams with a QB',qb)+
+    sq(ti,'Teams with a TE',te)+
+    box(needRB,'Rivals short at RB',`of ${uniq.length} picking before you`,needRB?'var(--rival)':null)+
+    box(needWR,'Rivals short at WR',`of ${uniq.length} picking before you`,needWR?'var(--rival)':null);
+}
+
+function drawRivals(){
+  const R=rosters(),C=curPick(),N=nextMine();
+  if(!N){$('rivals').innerHTML='<p class="hint">Draft complete.</p>';return;}
+  const gp=[];for(let n=C;n<N;n++)gp.push(n);
+  if(!gp.length){$('rivals').innerHTML='<p class="hint" style="color:var(--warn)">You are on the clock. Nobody picks before you.</p>';return;}
+  const last=gp[gp.length-1];               // the pick immediately before yours
+  const bySlot={};gp.forEach(n=>{(bySlot[slotOf(n)]=bySlot[slotOf(n)]||[]).push(n);});
+  const html=Object.keys(bySlot).map(Number)
+    .sort((a,b)=>bySlot[b].length-bySlot[a].length||a-b).map(s=>{
+    const c=R[s],rnd=roundOf(C),list=bySlot[s];
+    const wants=['RB','WR','TE','QB'].map(p=>({p,m:needMult(c,p,rnd)}))
+      .filter(x=>x.m>=1.2).sort((a,b)=>b.m-a.m).slice(0,3);
+    const picks=list.map(n=>`<span class="chip${n===last?' pre':''}" title="${pickLabel(n)}${n===last?' — last pick before yours':''}">${fmt(n)}<b style="color:var(--mute)"> #${n}</b></span>`).join('');
+    return `<div class="rv"><div class="rvh">
+      <div class="rvname">${teamName(s)}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--rival)">${list.length===1?'1 pick':list.length+' picks'}</div></div>
+      <div class="chips" style="margin-top:6px">${picks}</div>
+      <div class="rvroster">QB ${c.QB} · RB ${c.RB} · WR ${c.WR} · TE ${c.TE} &nbsp;(${c.n} drafted)</div>
+      <div style="margin-top:7px">${wants.length?wants.map(w=>`<span class="want">wants ${w.p}</span>`).join(''):'<span class="hint">no strong need yet</span>'}</div>
+    </div>`;}).join('');
+  $('rivals').innerHTML=`<p class="hint" style="margin:0 0 9px">Picks ${fmt(C)} through ${fmt(last)} — then you at ${fmt(N)}.</p>`+html;
+}
+
+/* ============ slot stepper across the top ============ */
+function drawSteps(C,total){
+  const r=roundOf(C), ltr=r%2===1, done=C>total;
+  const curSlot=done?null:slotOf(C);
+  // pick number for a given slot in this round
+  const noAt=sl=>(r-1)*S.teams+(ltr?sl:S.teams-sl+1);
+  let h='';
+  for(let sl=1;sl<=S.teams;sl++){
+    const no=noAt(sl), picked=no<C && !done, now=!done&&no===C;
+    h+=`<div class="stepnode ${picked?'done':''} ${now?'now':''} ${sl===S.slot?'me':''}"
+      title="${teamName(sl)} · ${fmt(no)}">${sl}</div>`;
+    if(sl<S.teams){
+      const nxt=noAt(sl+1), a=Math.min(no,nxt), fill=done?1:(C>Math.max(no,nxt)?1:(C>a?1:0));
+      h+=`<div class="stepseg ${ltr?'':'rtl'}"><i style="transform:scaleX(${fill})"></i></div>`;
+    }
+  }
+  $('steprow').innerHTML=h;
+  $('dirL').textContent=done?'':`Round ${r}`;
+  $('dirA').textContent=done?'':(ltr?'\u2192\u2192\u2192':'\u2190\u2190\u2190');
+  $('dirR').textContent=done?'Draft complete':(ltr?teamShort(1)+' \u2192 '+teamShort(S.teams):teamShort(S.teams)+' \u2192 '+teamShort(1));
+}
+
+/* ============ pick clock ============ */
+S._clockAt=Date.now(); S._clockFor=0;
+/* the draft is "running" only while there is a pick left to make and the board is
+   either connected to Sleeper or already has picks logged by hand */
+function drafting(){
+  if(curPick()>S.teams*S.rounds)return false;   // draft complete
+  return S.live||S.picks.length>0;              // otherwise it has not started yet
+}
+function tickClock(){
+  const el=$('pclock'); if(!el)return;
+  const n=S.picks.length;
+  if(n!==S._clockFor){S._clockFor=n;S._clockAt=Date.now();}
+  if(!drafting()){                               // parked — hold at zero, do not accumulate
+    S._clockAt=Date.now();
+    el.textContent=curPick()>S.teams*S.rounds?'—':'0:00';
+    el.classList.remove('warn','over');
+    el.classList.add('idle');
+    return;
+  }
+  el.classList.remove('idle');
+  const sec=Math.floor((Date.now()-S._clockAt)/1000);
+  el.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  const lim=+($('plimit')||{}).value||0;
+  el.classList.toggle('warn',!!lim&&sec>=lim*0.75&&sec<lim);
+  el.classList.toggle('over',!!lim&&sec>=lim);
+  // 15-seconds-left warning — only on YOUR pick, once per pick
+  if(lim>15){
+    const left=lim-sec, C=curPick();
+    if(left<=15&&left>12&&myPicks().includes(C)&&S._warned!==n&&typeof warn15==='function'){
+      S._warned=n; warn15();
+      if(typeof playPickSound==='function')playPickSound();
+    }
+  }
+}
+setInterval(tickClock,250);
+
+/* ============ main render ============ */
+let _ypFlashedFor=0;
+function render(){
+  const C=curPick(),N=nextMine(),mine=myPicks(),total=S.teams*S.rounds;
+  $('clk').textContent=C>total?'Done':fmt(C);
+  $('untl').textContent=N===null?'—':N===C?'NOW':(N-C)+(N-C===1?' pick':' picks');
+  $('untl').style.color=N===C?'var(--warn)':'var(--acc)';
+
+  if(N===C&&drafting()&&_ypFlashedFor!==C&&typeof flashYourPick==='function'){
+    _ypFlashedFor=C; flashYourPick();
+    if(typeof playPickSound==='function')playPickSound();
+  }else if(N!==C){
+    _ypFlashedFor=0;   // reset so it can flash again next time your turn comes up
+  }
+
+  const gs=new Set(gapSlots());
+  drawSteps(C,total);
+
+  drawIntel();drawRivals();drawTeam();drawECR();drawGrid();
+  if(typeof drawSug==='function')drawSug();
+  drawSheet(); if(typeof slpDraw==='function')slpDraw();
+  if(S.lTab==='adp')drawADP();
+  if(S.lTab==='other')drawOther();
+
+  $('qcnt').textContent=`${POOL.filter(p=>!S.picks.some(k=>k.key===norm(p[1]))&&(S.ecrPos==='ALL'||p[2]===S.ecrPos)).length} available`;
+  $('rcnt').textContent=`${S.picks.length} picks logged`;
+
+  const tk=S.picks.slice(-12).reverse();
+  $('ticker').innerHTML=tk.length?tk.map(p=>{const s=slotOf(p.no);
+    return `<div class="tickerline">${fmt(p.no)} &nbsp; <b>${p.name}</b> ${p.pos||''} ${p.team||''} ${
+      gs.has(s)||s===11||s===12?`<em>· ${teamName(s)}</em>`:`· ${teamName(s)}`}</div>`;}).join('')
+    :'<p class="hint">Nothing logged yet.</p>';
+  save();
+}
+
+/* ============ tabs ============ */
+function setTabR(t){
+  S.tabR=t;
+  $('paneIntel').style.display=t==='intel'?'':'none';
+  $('paneBoard').style.display=t==='board'?'':'none';
+  $('paneSheet').style.display=t==='sheet'?'':'none';
+  $('tabI').classList.toggle('on',t==='intel');
+  $('tabB').classList.toggle('on',t==='board');
+  $('tabS').classList.toggle('on',t==='sheet');
+  if(t==='sheet'){drawSheet(); if(typeof slpDraw==='function')slpDraw();}
+  blobTo($('tabI').parentNode);
+  if(t!=='board'&&document.body.classList.contains('wideboard'))setWide(false);
+  $('colR').scrollTop=0;
+  if(t==='board')setTimeout(()=>{if(S.follow!==false)pinToNow(false);},30);
+}
+/* spring blob that slides under whichever tab is active */
+function blobTo(group){
+  const bar=typeof group==='string'?$(group):group;
+  if(!bar)return;
+  let blob=bar.querySelector('.blob');
+  if(!blob){blob=document.createElement('span');blob.className='blob';bar.prepend(blob);}
+  const on=bar.querySelector('.tab.on');
+  if(!on){blob.style.opacity=0;return;}
+  blob.style.opacity=1;
+  blob.style.width=on.offsetWidth+'px';
+  blob.style.transform='translateX('+(on.offsetLeft-4)+'px)';
+}
+const allTabBars=()=>document.querySelectorAll('.tabs');
+function blobAll(){allTabBars().forEach(blobTo);}
+addEventListener('resize',blobAll);
+requestAnimationFrame(blobAll);
+
+/* ---- Sleeper ADP ---- */
+S.adp=null;
+function setLTab(t){
+  S.lTab=t;
+  $('ltPool').classList.toggle('on',t==='pool');
+  $('ltAdp').classList.toggle('on',t==='adp');
+  $('ltOther').classList.toggle('on',t==='other');
+  $('ltSug').classList.toggle('on',t==='sug');
+  $('ltRounds').classList.toggle('on',t==='rounds');
+  blobTo($('ltabs'));
+  $('subtabs').style.display=(t==='other'||t==='sug'||t==='rounds')?'none':'';
+  $('ecrlist').style.display=t==='pool'?'':'none';
+  $('adplist').style.display=t==='adp'?'':'none';
+  $('otherlist').style.display=t==='other'?'':'none';
+  $('suglist').style.display=t==='sug'?'':'none';
+  $('paneRounds').style.display=t==='rounds'?'':'none';
+  $('colL').scrollTop=0;
+  if(t==='adp'){loadADP();drawADP();}
+  if(t==='other')drawOther();
+  if(t==='sug')drawSug();
+  if(t==='rounds')drawRounds();
+}
+/* ---- mobile: swipe between the three columns ---- */
+(function(){
+  const cols=document.querySelector('.cols');
+  const pager=document.getElementById('pager');
+  if(!cols||!pager)return;
+  const dots=[...pager.children];
+  const mobile=()=>matchMedia('(max-width:900px)').matches;
+  cols.addEventListener('scroll',()=>{
+    if(!mobile())return;
+    const i=Math.round(cols.scrollLeft/cols.clientWidth);
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+  },{passive:true});
+  dots.forEach((d,i)=>d.addEventListener('click',()=>
+    cols.scrollTo({left:i*cols.clientWidth,behavior:'smooth'})));
+})();
+$('ltPool').onclick=()=>setLTab('pool');
+$('ltAdp').onclick=()=>setLTab('adp');
+$('ltOther').onclick=()=>setLTab('other');
+$('ltSug').onclick=()=>setLTab('sug');
+$('ltRounds').onclick=()=>setLTab('rounds');
+
+/* ---- Sleeper ADP: from the "Sleeper ADP" Google Sheet ---- */
+S.adp=ADP.map(r=>({adp:r[0],n:r[1],p:r[2],t:r[3],pts:r[4]}));
+async function loadADP(){}
+
+function drawADP(){
+  const el=$('adplist');if(!el)return;
+  const gone=new Set(S.picks.map(p=>p.key));
+  const ecr={};POOL.forEach(p=>ecr[norm(p[1])]=p[0]);
+  const rows=S.adp.filter(p=>!gone.has(norm(p.n)))
+    .filter(p=>S.ecrPos==='ALL'||p.p===S.ecrPos);
+  el.innerHTML=`<div class="adpnote">Sleeper ADP \u2014 ${S.adp.length} players from your \u201cSleeper ADP\u201d sheet.
+    Left column is ADP. Right column is ECR minus ADP: red means Sleeper drafters take him earlier
+    than FantasyPros ranks him, green means he lasts longer than he should.</div>`+
+    (rows.map(p=>{
+      const e=ecr[norm(p.n)], d=e?Math.round(e-p.adp):null, on=S.targets.some(x=>x.key===norm(p.n));
+      return `<div class="adpr" data-n="${p.n}">
+        <div class="ar">${p.adp}</div>
+        <div><div class="an">${p.n}${on?'<span class="star">&#9733;</span>':''}</div>
+          <div class="am">${p.p} \u00b7 ${p.t}${e?' \u00b7 ECR '+e:' \u00b7 unranked'}${p.pts?' \u00b7 '+p.pts+' pts':''}</div></div>
+        <div class="ad" style="color:${d==null?'var(--mute)':d>6?'var(--gone)':d<-6?'var(--safe)':'var(--mute)'}">${
+          d==null?'\u2014':(d>0?'+':'')+d}</div></div>`;}).join('')||'<div class="empty">No one left at this position.</div>');
+  document.querySelectorAll('#adplist .adpr').forEach(b=>b.onclick=()=>{
+    qsAdd(b.dataset.n);drawADP();});
+}
+
+/* ---- Other rankings: Fantasy Headliners Top 36 WR ---- */
+const HEADLINERS=[
+[1,1,"Ja'Marr Chase","CIN",3.2,1,1],[2,1,"Jaxon Smith-Njigba","SEA",6.9,2,2],
+[3,1,"Puka Nacua","LAR",4.3,3,4],[4,1,"Amon-Ra St. Brown","DET",8.0,4,3],
+[5,1,"CeeDee Lamb","DAL",9.0,5,6],[6,1,"Justin Jefferson","MIN",11.0,7,5],
+[7,2,"A.J. Brown","NE",19.2,6,8],[8,2,"Drake London","ATL",20.5,8,7],
+[9,2,"George Pickens","DAL",26.3,10,9],[10,2,"Nico Collins","HOU",23.0,9,10],
+[11,2,"Tetairoa McMillan","CAR",36.7,13,12],[12,2,"Malik Nabers","NYG",31.7,11,16],
+[13,2,"Emeka Egbuka","TB",39.0,18,11],[14,2,"Chris Olave","NO",32.0,14,18],
+[15,2,"Garrett Wilson","NYJ",43.7,17,15],[16,2,"Rashee Rice","KC",27.4,20,13],
+[17,2,"Mike Evans","SF",60.8,12,23],[18,2,"Zay Flowers","BAL",41.6,15,20],
+[19,3,"DeVonta Smith","PHI",34.1,23,14],[20,3,"Davante Adams","LAR",58.6,21,17],
+[21,3,"Ladd McConkey","LAC",40.6,19,19],[22,3,"Tee Higgins","CIN",38.0,16,24],
+[23,3,"Rome Odunze","CHI",62.8,22,28],[24,3,"Jaylen Waddle","DEN",48.4,30,21],
+[25,3,"Terry McLaurin","WAS",52.8,24,27],[26,3,"DJ Moore","BUF",57.4,25,30],
+[27,3,"Michael Wilson","ARI",88.6,27,29],[28,3,"Parker Washington","JAX",75.6,26,31],
+[29,4,"Jameson Williams","DET",55.7,36,22],[30,4,"Calvin Ridley","TEN",62.3,28,32],
+[31,4,"Christian Watson","GB",68.1,37,25],[32,4,"Luther Burden III","CHI",55.6,29,37],
+[33,4,"Wan'Dale Robinson","TEN",112.0,35,35],[34,4,"Quentin Johnston","LAC",102.1,31,40],
+[35,4,"Courtland Sutton","DEN",85.6,46,26],[36,4,"Stefon Diggs","WAS",118.7,38,34]];
+/* Fantasy Headliners Top 30 RB */
+const HLRB=[
+[1,1,"Bijan Robinson","ATL",2.0,1,1],[2,1,"Jahmyr Gibbs","DET",1.0,2,2],
+[3,1,"Christian McCaffrey","SF",5.4,3,3],[4,1,"Jonathan Taylor","IND",6.9,4,4],
+[5,2,"James Cook III","BUF",9.6,5,5],[6,2,"Omarion Hampton","LAC",15.8,6,6],
+[7,2,"Derrick Henry","BAL",17.7,7,10],[8,2,"Chase Brown","CIN",16.1,8,9],
+[9,2,"Kenneth Walker III","KC",18.1,11,7],[10,2,"De'Von Achane","MIA",13.5,12,8],
+[11,2,"Saquon Barkley","PHI",13.2,10,11],[12,2,"Ashton Jeanty","LV",12.1,9,13],
+[13,2,"Travis Etienne Jr.","NO",41.2,15,12],[14,2,"Javonte Williams","DAL",33.7,13,14],
+[15,3,"Kyren Williams","LAR",27.5,14,16],[16,3,"Josh Jacobs","GB",29.4,19,15],
+[17,3,"Quinshon Judkins","CLE",46.0,17,19],[18,3,"Jeremiyah Love","ARI",25.0,16,21],
+[19,3,"Breece Hall","NYJ",30.1,21,17],[20,3,"Bucky Irving","TB",45.2,20,18],
+[21,3,"David Montgomery","HOU",48.9,18,22],[22,3,"Cam Skattebo","NYG",37.9,22,20],
+[23,3,"D'Andre Swift","CHI",53.3,23,23],
+[24,4,"Bhayshul Tuten","JAC",59.4,24,26],[25,4,"Jadarian Price","SEA",61.0,25,25],
+[26,4,"Rhamondre Stevenson","NE",78.5,27,24],[27,4,"Jaylen Warren","PIT",69.8,26,28],
+[28,4,"TreVeyon Henderson","NE",47.3,29,27],[29,4,"RJ Harvey","DEN",81.2,30,30],
+[30,4,"Rico Dowdle","PIT",83.8,31,31]];
+const HLDATA={QB:[],RB:HLRB,WR:HEADLINERS,TE:[]};
+const SLOTWR=[
+['Elite \u2014 Slot Workhorses',[
+  ['Amon-Ra St. Brown','DET','172 targets in 2025 \u2014 the archetype'],
+  ["Ja'Marr Chase",'CIN','Led NFL with 185 targets; moves inside plenty'],
+  ['Jaxon Smith-Njigba','SEA','36% target share, but 77% of snaps out wide now'],
+  ['Puka Nacua','LAR','166 targets in 2025']]],
+['Mid-Round Value',[
+  ['Emeka Egbuka','TB','24% target share + 38.6% air yards over first 9 games'],
+  ['Josh Downs','IND','24% target share, 20th in separation; Pittman gone'],
+  ['Khalil Shakir','BUF','Floor play \u2014 DJ Moore addition caps the ceiling']]],
+['Deeper Darts',[
+  ['Parker Washington','JAX','29 targets over final 3 weeks; Coen force-feeds the slot'],
+  ['Luther Burden III','CHI','Talented, but groin injury clouds Week 1']]]];
+S.hlPos='QB';
+const HLTIER={1:'Tier 1',2:'Tier 2',3:'Tier 3',4:'Tier 4'};
+const HLTIER1={WR:'Tier 1 \u2014 The Untouchables'};
+const hlTierLab=(t,pos)=>(t===1&&HLTIER1[pos])?HLTIER1[pos]:HLTIER[t];
+function drawOther(){
+  const el=$('otherlist');if(!el)return;
+  const gone=new Set(S.picks.map(p=>p.key));
+  const list=HLDATA[S.hlPos]||[];
+  const rows=list.filter(r=>!gone.has(norm(r[2])));
+  let html=`<div class="colhead" style="position:static;padding:0 0 6px">
+      <h2 class="hltitle">Fantasy Headliner Rankings</h2><span class="cnt">${rows.length} left</span></div>
+    <div class="subtabs" id="hltabs">`+
+    ['QB','RB','WR','TE'].map(p=>`<span class="subtab${p===S.hlPos?' on':''}" data-p="${p}">${p}</span>`).join('')+
+    `</div>`;
+  if(!list.length){
+    html+=`<div class="empty">No Fantasy Headliners ${S.hlPos} rankings loaded yet.</div>`;
+  }else{
+    html+=`<div class="adpnote">Fantasy Headliners top-${list.length} ${S.hlPos} board. Columns: ADP \u00b7 Jake \u00b7 Kyle.
+      Players drop off as they come off the draft board.</div>`;
+    if(!rows.length)html+='<div class="empty">Every ranked player here is gone.</div>';
+    let tier=null;
+    rows.forEach(r=>{
+      if(r[1]!==tier){tier=r[1];
+        html+=`<div class="subtabs" style="margin:10px 0 6px"><span class="subtab on">${hlTierLab(tier,S.hlPos)}</span></div>`;}
+      const on=S.targets.some(x=>x.key===norm(r[2]));
+      html+=`<div class="adpr" data-n="${r[2]}">
+        <div class="ar">${r[0]}</div>
+        <div><div class="an">${r[2]}${on?'<span class="star">&#9733;</span>':''}</div>
+          <div class="am">${S.hlPos} \u00b7 ${r[3]} \u00b7 ADP ${r[4]} \u00b7 Jake ${r[5]} \u00b7 Kyle ${r[6]}</div></div>
+        <div class="ad" style="color:var(--mute)">${r[4]}</div></div>`;
+    });
+  }
+  html+=`<div class="slotsec"><h2 class="hltitle">Slot Receivers</h2>
+    <div class="adpnote">2026 slot-heavy targets. Tap a name to add to your targets.</div>`;
+  SLOTWR.forEach(g=>{
+    html+=`<div class="subtabs" style="margin:10px 0 6px"><span class="subtab on">${g[0]}</span></div>`;
+    g[1].forEach(r=>{
+      if(gone.has(norm(r[0])))return;
+      const on=S.targets.some(x=>x.key===norm(r[0]));
+      html+=`<div class="adpr" data-n="${r[0]}">
+        <div class="ar">\u25CF</div>
+        <div><div class="an">${r[0]}${on?'<span class="star">&#9733;</span>':''}</div>
+          <div class="am">WR \u00b7 ${r[1]} \u00b7 ${r[2]}</div></div></div>`;
+    });
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+  document.querySelectorAll('#hltabs .subtab').forEach(b=>b.onclick=()=>{S.hlPos=b.dataset.p;$('colL').scrollTop=0;drawOther();});
+  document.querySelectorAll('#otherlist .adpr').forEach(b=>b.onclick=()=>{qsAdd(b.dataset.n);drawOther();});
+}
+
+document.querySelectorAll('#subtabs .tab').forEach(b=>b.onclick=()=>{
+  S.ecrPos=b.dataset.p;
+  if(S.lTab==='adp'){document.querySelectorAll('#subtabs .tab').forEach(x=>x.classList.toggle('on',x===b));blobTo($('subtabs'));drawADP();return;}
+  document.querySelectorAll('#subtabs .tab').forEach(x=>x.classList.toggle('on',x===b));
+  blobTo($('subtabs'));
+  $('colL').scrollTop=0;
+  drawECR();
+});
+$('tabI').onclick=()=>setTabR('intel'); $('tabB').onclick=()=>setTabR('board');
+$('tabS').onclick=()=>setTabR('sheet');
+/* the quick-sheet copy drives the same connect() as the rail popover */
+
+
+/* ---- export the board: one row per round, one column per pick slot ---- */
+function boardCSV(){
+  const byNo={};S.picks.forEach(p=>byNo[p.no]=p);
+  const q=v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const head=['Round'];
+  for(let sl=1;sl<=S.teams;sl++)head.push(teamName(sl));
+  const lines=[head.map(q).join(',')];
+  for(let r=1;r<=S.rounds;r++){
+    const row=['R'+r];
+    for(let sl=1;sl<=S.teams;sl++){
+      const no=(r-1)*S.teams+(r%2?sl:S.teams-sl+1);
+      const p=byNo[no];
+      row.push(p?`${no}. ${p.name}${p.pos?' ('+p.pos+(p.team?' '+p.team:'')+')':''}`:no);
+    }
+    lines.push(row.map(q).join(','));
+  }
+  return '\ufeff'+lines.join('\r\n');   // BOM so Excel reads accents correctly
+}
+function download(name,text,mime){
+  const b=new Blob([text],{type:mime}),u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);
+  a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+function expNote(msg){
+  let el=document.getElementById('expNote');
+  if(!el){el=document.createElement('div');el.id='expNote';
+    el.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:999;'+
+      'background:#111;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;'+
+      'box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:80vw;text-align:center';
+    document.body.appendChild(el);}
+  el.textContent=msg;el.style.display='';
+  clearTimeout(expNote._t);expNote._t=setTimeout(()=>{el.style.display='none';},3200);
+}
+/* board as TSV -- pastes straight into a Google Sheet cell grid */
+function boardTSV(){
+  const byNo={};S.picks.forEach(p=>byNo[p.no]=p);
+  const c=v=>String(v==null?'':v).replace(/[\t\r\n]/g,' ');
+  const head=['Round'];
+  for(let sl=1;sl<=S.teams;sl++)head.push(teamName(sl));
+  const lines=[head.map(c).join('\t')];
+  for(let r=1;r<=S.rounds;r++){
+    const row=['R'+r];
+    for(let sl=1;sl<=S.teams;sl++){
+      const no=(r-1)*S.teams+(r%2?sl:S.teams-sl+1);
+      const p=byNo[no];
+      row.push(p?`${no}. ${p.name}${p.pos?' ('+p.pos+(p.team?' '+p.team:'')+')':''}`:no);
+    }
+    lines.push(row.map(c).join('\t'));
+  }
+  return lines.join('\n');
+}
+$('exportBtn').onclick=async()=>{
+  const tsv=boardTSV();
+  let ok=false;
+  try{await navigator.clipboard.writeText(tsv);ok=true;}
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=tsv;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();
+      ok=document.execCommand('copy');ta.remove();
+    }catch(e2){}
+  }
+  if(ok){
+    expNote('Board copied \u2014 paste into the new sheet with Ctrl/Cmd+V');
+    window.open('https://sheets.new','_blank','noopener');
+  }else{
+    expNote('Could not reach the clipboard \u2014 try again');
+  }
+};
+
+/* ---- quick sheet sub-tabs: Queue / Things to remember ---- */
+let TTR=[];
+function ttrSave(){try{localStorage.setItem('ttr2026',JSON.stringify(TTR));}catch(e){}}
+function ttrLoad(){try{const v=localStorage.getItem('ttr2026');const a=v?JSON.parse(v):null;
+  if(Array.isArray(a))TTR=a;}catch(e){}}
+function ttrDraw(){
+  $('ttrList').innerHTML=TTR.length?TTR.map((t,i)=>`
+    <div class="qs" style="grid-template-columns:26px 1fr auto">
+      <div class="qrk">${i+1}</div>
+      <div><div class="qn" style="white-space:normal">${t.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div></div>
+      <button class="qsx" data-i="${i}" title="Remove">&times;</button>
+    </div>`).join(''):'<p class="hint">Nothing here yet. Add anything you want to keep in front of you during the draft.</p>';
+  document.querySelectorAll('#ttrList .qsx').forEach(b=>b.onclick=()=>{
+    TTR.splice(+b.dataset.i,1);ttrSave();ttrDraw();});
+}
+function ttrAdd(){
+  const v=$('ttrName').value.trim(); if(!v)return;
+  TTR.push(v);ttrSave();ttrDraw();$('ttrName').value='';
+}
+$('ttrAdd').onclick=ttrAdd;
+$('ttrName').addEventListener('keydown',e=>{if(e.key==='Enter')ttrAdd();});
+function setQsTab(q){
+  $('qsPaneQueue').style.display=q==='queue'?'':'none';
+  $('qsPaneNotes').style.display=q==='notes'?'':'none';
+  $('qsPaneSleep').style.display=q==='sleepers'?'':'none';
+  $('qsTabQueue').classList.toggle('on',q==='queue');
+  $('qsTabNotes').classList.toggle('on',q==='notes');
+  $('qsTabSleep').classList.toggle('on',q==='sleepers');
+  try{localStorage.setItem('qsTab',q);}catch(e){}
+}
+$('qsTabQueue').onclick=()=>setQsTab('queue');
+$('qsTabNotes').onclick=()=>setQsTab('notes');
+$('qsTabSleep').onclick=()=>setQsTab('sleepers');
+
+/* ---- sleepers: late-round guys you want to keep an eye on ---- */
+let SLP=[];
+function slpSave(){try{localStorage.setItem('slp2026',JSON.stringify(SLP));}catch(e){}}
+function slpLoad(){try{const v=localStorage.getItem('slp2026');const a=v?JSON.parse(v):null;
+  if(Array.isArray(a))SLP=a;}catch(e){}}
+function slpDraw(){
+  const gone=new Set(S.picks.map(p=>norm(p.name)));
+  $('slpList').innerHTML=SLP.length?SLP.map((p,i)=>{
+    const out=gone.has(p.key);
+    return `<div class="qs${out?' out':''}" style="grid-template-columns:26px 1fr auto">
+      <div class="qrk">${p.adp||'—'}</div>
+      <div><div class="qn">${p.name}</div>
+        <div class="qm">${[p.pos,p.team,out?'DRAFTED':(p.tier?'TIER '+p.tier:'')].filter(Boolean).join(' · ')}</div></div>
+      <button class="qsx" data-i="${i}" title="Remove">&times;</button>
+    </div>`;}).join('')
+    :'<p class="hint">No sleepers yet. Stash the late-round guys you keep talking yourself into.</p>';
+  document.querySelectorAll('#slpList .qsx').forEach(b=>b.onclick=()=>{
+    SLP.splice(+b.dataset.i,1);slpSave();slpDraw();});
+}
+function slpAdd(name){
+  const hit=BYKEY[norm(name)]||POOL.map(p=>BYKEY[norm(p[1])]).find(p=>norm(p.name).startsWith(norm(name)));
+  const nm=hit?hit.name:name.trim(); if(!nm)return;
+  const k=norm(nm); if(SLP.some(x=>x.key===k))return;
+  SLP.push({name:nm,pos:hit?hit.pos:'',team:hit?hit.team:'',adp:hit?hit.rk:'',tier:hit?hit.tier:0,key:k});
+  slpSave();slpDraw();
+}
+$('slpAdd').onclick=()=>{slpAdd($('slpName').value);$('slpName').value='';$('slpSugg').innerHTML='';};
+$('slpName').addEventListener('keydown',e=>{if(e.key==='Enter')$('slpAdd').click();});
+$('slpName').addEventListener('input',e=>{
+  const q=norm(e.target.value);
+  if(q.length<2){$('slpSugg').innerHTML='';return;}
+  const hits=POOL.filter(p=>norm(p[1]).includes(q)&&!SLP.some(x=>x.key===norm(p[1]))).slice(0,6);
+  $('slpSugg').innerHTML=hits.map(p=>`<button class="chip" style="margin:4px 4px 0 0;cursor:pointer"
+    data-n="${p[1]}">${p[1]} <b style="color:var(--mute)">${p[2]} ${p[3]} #${p[0]}</b></button>`).join('');
+  document.querySelectorAll('#slpSugg button').forEach(b=>b.onclick=()=>{
+    slpAdd(b.dataset.n);$('slpName').value='';$('slpSugg').innerHTML='';});
+});
+slpLoad();
+const SLP_SEED=["Jordan Mason","Dalton Kincaid","Tyler Shough","Rashid Shaheed","Stefon Diggs",
+  "Isaiah Likely","Cam Ward","Jalen McMillan","Chris Rodriguez Jr.","De'Zhaun Stribling",
+  "Denzel Boston","Jaydon Blue","MarShawn Lloyd","Ja'Kobi Lane","Adonai Mitchell",
+  "Terrance Ferguson","Ryan Flournoy","Tank Dell","Blake Corum","Kyler Murray"];
+if(!SLP.length){SLP_SEED.forEach(n=>slpAdd(n));slpSave();}
+slpDraw();
+ttrLoad();ttrDraw();
+try{setQsTab(localStorage.getItem('qsTab')||'queue');}catch(e){setQsTab('queue');}
+
+/* ---- quick sheet: your own shortlist, kept apart from the queue ---- */
+function saveSheet(){try{localStorage.setItem('qs2026',JSON.stringify(S.targets));}catch(e){}}
+function loadSheet(){try{const v=localStorage.getItem('qs2026');
+  const a=v?JSON.parse(v):null; if(a&&a.length)S.targets=a;}catch(e){}}
+function qsAdd(name){
+  const hit=BYKEY[norm(name)]||POOL.map(p=>BYKEY[norm(p[1])]).find(p=>norm(p.name).startsWith(norm(name)));
+  const nm=hit?hit.name:name.trim(); if(!nm)return;
+  const k=norm(nm); if(S.targets.some(x=>x.key===k))return;
+  S.targets.push({name:nm,pos:hit?hit.pos:'',team:hit?hit.team:'',adp:hit?hit.rk:150,
+                tier:hit?hit.tier:0,key:k});
+  saveSheet();render();
+}
+$('qsAdd').onclick=()=>{qsAdd($('qsName').value);$('qsName').value='';$('qsSugg').innerHTML='';};
+$('qsName').addEventListener('keydown',e=>{if(e.key==='Enter')$('qsAdd').click();});
+$('qsName').addEventListener('input',e=>{
+  const q=norm(e.target.value);
+  if(q.length<2){$('qsSugg').innerHTML='';return;}
+  const hits=POOL.filter(p=>norm(p[1]).includes(q)&&!S.targets.some(x=>x.key===norm(p[1]))).slice(0,6);
+  $('qsSugg').innerHTML=hits.map(p=>`<button class="chip" style="margin:4px 4px 0 0;cursor:pointer"
+    data-n="${p[1]}">${p[1]} <b style="color:var(--mute)">${p[2]} ${p[3]} #${p[0]}</b></button>`).join('');
+  document.querySelectorAll('#qsSugg button').forEach(b=>b.onclick=()=>{
+    qsAdd(b.dataset.n);$('qsName').value='';$('qsSugg').innerHTML='';});
+});
+const ROUNDS_DATA={"ranges":{"1":[1,16],"2":[16,33],"3":[34,40],"4":[40,57],"5":[58,64],"6":[64,81],"7":[82,88],"8":[88,105],"9":[106,112],"10":[112,129],"11":[130,136],"12":[136,153],"13":[154,168]},"rounds":{"1":[{"name":"Jahmyr Gibbs","pos":"RB","team":"DET","avg":1.0,"n":8},{"name":"Bijan Robinson","pos":"RB","team":"ATL","avg":2.0,"n":8},{"name":"Ja'Marr Chase","pos":"WR","team":"CIN","avg":3.6,"n":8},{"name":"Puka Nacua","pos":"WR","team":"LAR","avg":4.6,"n":8},{"name":"Christian McCaffrey","pos":"RB","team":"SF","avg":5.8,"n":8},{"name":"Jonathan Taylor","pos":"RB","team":"IND","avg":6.1,"n":8},{"name":"Jaxon Smith-Njigba","pos":"WR","team":"SEA","avg":6.2,"n":8},{"name":"Amon-Ra St. Brown","pos":"WR","team":"DET","avg":7.8,"n":8},{"name":"James Cook","pos":"RB","team":"BUF","avg":8.0,"n":8},{"name":"Saquon Barkley","pos":"RB","team":"PHI","avg":11.8,"n":8},{"name":"Chase Brown","pos":"RB","team":"CIN","avg":12.5,"n":8},{"name":"Justin Jefferson","pos":"WR","team":"MIN","avg":12.6,"n":8},{"name":"CeeDee Lamb","pos":"WR","team":"DAL","avg":13.1,"n":8},{"name":"De'Von Achane","pos":"RB","team":"MIA","avg":13.9,"n":8},{"name":"Omarion Hampton","pos":"RB","team":"LAC","avg":14.6,"n":8},{"name":"Kenneth Walker","pos":"RB","team":"KC","avg":15.4,"n":8}],"2":[{"name":"Derrick Henry","pos":"RB","team":"BAL","avg":17.8,"n":8},{"name":"Ashton Jeanty","pos":"RB","team":"LV","avg":18.4,"n":8},{"name":"A.J. Brown","pos":"WR","team":"NE","avg":19.0,"n":8},{"name":"Drake London","pos":"WR","team":"ATL","avg":19.2,"n":8},{"name":"Brock Bowers","pos":"TE","team":"LV","avg":22.2,"n":8},{"name":"Nico Collins","pos":"WR","team":"HOU","avg":22.4,"n":8},{"name":"George Pickens","pos":"WR","team":"DAL","avg":24.8,"n":8},{"name":"Trey McBride","pos":"TE","team":"ARI","avg":25.4,"n":8},{"name":"Kyren Williams","pos":"RB","team":"LAR","avg":25.4,"n":8},{"name":"Malik Nabers","pos":"WR","team":"NYG","avg":25.6,"n":8},{"name":"Rashee Rice","pos":"WR","team":"KC","avg":27.4,"n":8},{"name":"Chris Olave","pos":"WR","team":"NO","avg":27.8,"n":8},{"name":"Josh Allen","pos":"QB","team":"BUF","avg":28.2,"n":8},{"name":"Javonte Williams","pos":"RB","team":"DAL","avg":28.2,"n":8},{"name":"Jeremiyah Love","pos":"RB","team":"ARI","avg":28.5,"n":8},{"name":"Breece Hall","pos":"RB","team":"NYJ","avg":32.0,"n":8},{"name":"DeVonta Smith","pos":"WR","team":"PHI","avg":33.1,"n":8}],"3":[{"name":"Josh Jacobs","pos":"RB","team":"GB","avg":35.4,"n":8},{"name":"Ladd McConkey","pos":"WR","team":"LAC","avg":36.5,"n":8},{"name":"Zay Flowers","pos":"WR","team":"BAL","avg":38.0,"n":8},{"name":"Travis Etienne","pos":"RB","team":"NO","avg":39.2,"n":8},{"name":"Tetairoa McMillan","pos":"WR","team":"CAR","avg":39.4,"n":8},{"name":"Tee Higgins","pos":"WR","team":"CIN","avg":39.8,"n":8}],"4":[{"name":"Garrett Wilson","pos":"WR","team":"NYJ","avg":40.0,"n":8},{"name":"Emeka Egbuka","pos":"WR","team":"TB","avg":40.1,"n":8},{"name":"Cam Skattebo","pos":"RB","team":"NYG","avg":41.0,"n":8},{"name":"Bucky Irving","pos":"RB","team":"TB","avg":42.9,"n":8},{"name":"Colston Loveland","pos":"TE","team":"CHI","avg":43.0,"n":8},{"name":"Jaylen Waddle","pos":"WR","team":"DEN","avg":43.2,"n":8},{"name":"Lamar Jackson","pos":"QB","team":"BAL","avg":44.2,"n":8},{"name":"D'Andre Swift","pos":"RB","team":"CHI","avg":47.1,"n":8},{"name":"David Montgomery","pos":"RB","team":"HOU","avg":49.0,"n":8},{"name":"Davante Adams","pos":"WR","team":"LAR","avg":50.2,"n":8},{"name":"Tyler Warren","pos":"TE","team":"IND","avg":52.1,"n":8},{"name":"Luther Burden","pos":"WR","team":"CHI","avg":52.6,"n":8},{"name":"Quinshon Judkins","pos":"RB","team":"CLE","avg":52.9,"n":8},{"name":"Terry McLaurin","pos":"WR","team":"WAS","avg":53.6,"n":8},{"name":"DJ Moore","pos":"WR","team":"BUF","avg":54.6,"n":8},{"name":"Jadarian Price","pos":"RB","team":"SEA","avg":55.0,"n":8},{"name":"Bhayshul Tuten","pos":"RB","team":"JAX","avg":55.5,"n":8},{"name":"TreVeyon Henderson","pos":"RB","team":"NE","avg":55.6,"n":8}],"5":[{"name":"Drake Maye","pos":"QB","team":"NE","avg":58.2,"n":8},{"name":"Jameson Williams","pos":"WR","team":"DET","avg":58.4,"n":8},{"name":"Rome Odunze","pos":"WR","team":"CHI","avg":60.4,"n":8},{"name":"Parker Washington","pos":"WR","team":"JAX","avg":60.6,"n":8}],"6":[{"name":"Joe Burrow","pos":"QB","team":"CIN","avg":64.1,"n":8},{"name":"Christian Watson","pos":"WR","team":"GB","avg":64.9,"n":8},{"name":"Mike Evans","pos":"WR","team":"SF","avg":64.9,"n":8},{"name":"Sam LaPorta","pos":"TE","team":"DET","avg":66.0,"n":8},{"name":"Carnell Tate","pos":"WR","team":"TEN","avg":66.1,"n":8},{"name":"Marvin Harrison","pos":"WR","team":"ARI","avg":68.6,"n":8},{"name":"Jalen Hurts","pos":"QB","team":"PHI","avg":69.8,"n":8},{"name":"Brian Thomas","pos":"WR","team":"JAX","avg":70.0,"n":8},{"name":"Tucker Kraft","pos":"TE","team":"GB","avg":70.6,"n":8},{"name":"Rhamondre Stevenson","pos":"RB","team":"NE","avg":70.6,"n":8},{"name":"Jaylen Warren","pos":"RB","team":"PIT","avg":71.5,"n":8},{"name":"Chuba Hubbard","pos":"RB","team":"CAR","avg":74.8,"n":8},{"name":"DK Metcalf","pos":"WR","team":"PIT","avg":76.1,"n":8},{"name":"RJ Harvey","pos":"RB","team":"DEN","avg":77.0,"n":8},{"name":"Courtland Sutton","pos":"WR","team":"DEN","avg":77.1,"n":8},{"name":"Jayden Daniels","pos":"QB","team":"WAS","avg":79.4,"n":8},{"name":"Michael Wilson","pos":"WR","team":"ARI","avg":80.2,"n":8},{"name":"Caleb Williams","pos":"QB","team":"CHI","avg":81.2,"n":8},{"name":"J.K. Dobbins","pos":"RB","team":"DEN","avg":81.6,"n":8}],"7":[{"name":"Kyle Pitts","pos":"TE","team":"ATL","avg":82.0,"n":8},{"name":"Jonathon Brooks","pos":"RB","team":"CAR","avg":83.4,"n":8},{"name":"Makai Lemon","pos":"WR","team":"PHI","avg":83.5,"n":8},{"name":"Harold Fannin","pos":"TE","team":"CLE","avg":84.2,"n":8},{"name":"Rico Dowdle","pos":"RB","team":"PIT","avg":84.2,"n":8},{"name":"Tony Pollard","pos":"RB","team":"TEN","avg":84.5,"n":8},{"name":"Chris Godwin","pos":"WR","team":"TB","avg":86.1,"n":8}],"8":[{"name":"Blake Corum","pos":"RB","team":"LAR","avg":90.8,"n":8},{"name":"Justin Herbert","pos":"QB","team":"LAC","avg":91.4,"n":8},{"name":"Jordyn Tyson","pos":"WR","team":"NO","avg":91.5,"n":8},{"name":"Kyle Monangai","pos":"RB","team":"CHI","avg":91.9,"n":8},{"name":"Michael Pittman","pos":"WR","team":"PIT","avg":93.2,"n":8},{"name":"Alec Pierce","pos":"WR","team":"IND","avg":94.9,"n":8},{"name":"George Kittle","pos":"TE","team":"SF","avg":95.0,"n":8},{"name":"Josh Downs","pos":"WR","team":"IND","avg":95.8,"n":8},{"name":"Dak Prescott","pos":"QB","team":"DAL","avg":96.8,"n":8},{"name":"Dalton Kincaid","pos":"TE","team":"BUF","avg":97.5,"n":8},{"name":"Jacory Croskey-Merritt","pos":"RB","team":"WAS","avg":97.5,"n":8},{"name":"Trevor Lawrence","pos":"QB","team":"JAX","avg":97.8,"n":8},{"name":"Jordan Addison","pos":"WR","team":"MIN","avg":97.8,"n":8},{"name":"Jordan Mason","pos":"RB","team":"MIN","avg":98.4,"n":8},{"name":"Quentin Johnston","pos":"WR","team":"LAC","avg":99.8,"n":8},{"name":"Travis Kelce","pos":"TE","team":"KC","avg":101.8,"n":8},{"name":"Jaxson Dart","pos":"QB","team":"NYG","avg":103.2,"n":8},{"name":"Matthew Stafford","pos":"QB","team":"LAR","avg":105.2,"n":8},{"name":"Jayden Reed","pos":"WR","team":"GB","avg":105.9,"n":8}],"9":[{"name":"Isaiah Likely","pos":"TE","team":"NYG","avg":106.1,"n":8},{"name":"Stefon Diggs","pos":"WR","team":"WAS","avg":106.6,"n":8},{"name":"KC Concepcion","pos":"WR","team":"CLE","avg":107.9,"n":8},{"name":"Kenny Gainwell","pos":"RB","team":"TB","avg":110.1,"n":8},{"name":"Wan'Dale Robinson","pos":"WR","team":"TEN","avg":110.6,"n":8},{"name":"Jake Ferguson","pos":"TE","team":"DAL","avg":111.4,"n":8}],"10":[{"name":"Patrick Mahomes","pos":"QB","team":"KC","avg":112.1,"n":8},{"name":"De'Zhaun Stribling","pos":"WR","team":"SF","avg":112.2,"n":8},{"name":"Matthew Golden","pos":"WR","team":"GB","avg":113.0,"n":8},{"name":"Jakobi Meyers","pos":"WR","team":"JAX","avg":114.4,"n":8},{"name":"Bo Nix","pos":"QB","team":"DEN","avg":118.0,"n":8},{"name":"Brock Purdy","pos":"QB","team":"SF","avg":118.5,"n":8},{"name":"Aaron Jones","pos":"RB","team":"MIN","avg":118.8,"n":8},{"name":"Dallas Goedert","pos":"TE","team":"PHI","avg":118.8,"n":8},{"name":"Rachaad White","pos":"RB","team":"WAS","avg":119.1,"n":8},{"name":"Romeo Doubs","pos":"WR","team":"NE","avg":121.4,"n":8},{"name":"Mark Andrews","pos":"TE","team":"BAL","avg":125.0,"n":8},{"name":"Jalen Coker","pos":"WR","team":"CAR","avg":125.6,"n":7},{"name":"Chris Rodriguez","pos":"RB","team":"JAX","avg":126.1,"n":7},{"name":"Deebo Samuel","pos":"WR","team":"SF","avg":126.9,"n":8},{"name":"Oronde Gadsden","pos":"TE","team":"LAC","avg":127.2,"n":8},{"name":"Zach Charbonnet","pos":"RB","team":"SEA","avg":127.9,"n":7},{"name":"Mike Washington","pos":"RB","team":"LV","avg":128.7,"n":6}],"11":[{"name":"Xavier Worthy","pos":"WR","team":"KC","avg":130.1,"n":8},{"name":"Rashid Shaheed","pos":"WR","team":"SEA","avg":130.6,"n":7},{"name":"Khalil Shakir","pos":"WR","team":"BUF","avg":130.9,"n":8},{"name":"Jared Goff","pos":"QB","team":"DET","avg":131.6,"n":8},{"name":"Hunter Henry","pos":"TE","team":"NE","avg":132.2,"n":8},{"name":"Woody Marks","pos":"RB","team":"HOU","avg":133.3,"n":7},{"name":"Tyler Allgeier","pos":"RB","team":"ARI","avg":135.6,"n":7}],"12":[{"name":"MarShawn Lloyd","pos":"RB","team":"GB","avg":136.0,"n":2},{"name":"Baker Mayfield","pos":"QB","team":"TB","avg":136.4,"n":8},{"name":"Keaton Mitchell","pos":"RB","team":"LAC","avg":137.8,"n":6},{"name":"Jordan Love","pos":"QB","team":"GB","avg":139.4,"n":7},{"name":"Kyler Murray","pos":"QB","team":"MIN","avg":139.9,"n":7},{"name":"Tank Bigsby","pos":"RB","team":"PHI","avg":140.5,"n":6},{"name":"Denzel Boston","pos":"WR","team":"CLE","avg":141.3,"n":7},{"name":"Kenyon Sadiq","pos":"TE","team":"NYJ","avg":141.4,"n":8},{"name":"Brenton Strange","pos":"TE","team":"JAX","avg":142.1,"n":8},{"name":"Jonah Coleman","pos":"RB","team":"DEN","avg":142.4,"n":7},{"name":"Ja'Kobi Lane","pos":"WR","team":"BAL","avg":143.1,"n":7},{"name":"Brian Robinson","pos":"RB","team":"ATL","avg":145.1,"n":7},{"name":"Tyrone Tracy","pos":"RB","team":"NYG","avg":145.1,"n":7},{"name":"Alvin Kamara","pos":"RB","team":"NO","avg":146.4,"n":7},{"name":"Kaelon Black","pos":"RB","team":"SF","avg":146.5,"n":2},{"name":"Malik Willis","pos":"QB","team":"MIA","avg":147.0,"n":1},{"name":"Tyler Shough","pos":"QB","team":"NO","avg":147.5,"n":2},{"name":"Tyjae Spears","pos":"RB","team":"TEN","avg":147.7,"n":7},{"name":"Malik Washington","pos":"WR","team":"MIA","avg":148.0,"n":5},{"name":"Tank Dell","pos":"WR","team":"HOU","avg":150.4,"n":5},{"name":"Isiah Pacheco","pos":"RB","team":"DET","avg":150.7,"n":3},{"name":"Travis Hunter","pos":"WR","team":"JAX","avg":151.2,"n":6},{"name":"T.J. Hockenson","pos":"TE","team":"MIN","avg":151.5,"n":4},{"name":"Cyrus Allen","pos":"WR","team":"KC","avg":152.8,"n":4},{"name":"Jalen Nailor","pos":"WR","team":"LV","avg":153.0,"n":2},{"name":"Sam Darnold","pos":"QB","team":"SEA","avg":153.2,"n":5}],"13":[{"name":"Jayden Higgins","pos":"WR","team":"HOU","avg":155.0,"n":3},{"name":"Chig Okonkwo","pos":"TE","team":"WAS","avg":155.0,"n":1},{"name":"Omar Cooper","pos":"WR","team":"NYJ","avg":156.0,"n":2},{"name":"Fernando Mendoza","pos":"QB","team":"LV","avg":156.0,"n":1},{"name":"Juwan Johnson","pos":"TE","team":"NO","avg":156.0,"n":1},{"name":"Jalen McMillan","pos":"WR","team":"TB","avg":157.7,"n":3},{"name":"Keenan Allen","pos":"WR","team":"IND","avg":160.0,"n":1},{"name":"Dylan Sampson","pos":"RB","team":"CLE","avg":163.0,"n":1},{"name":"Braelon Allen","pos":"RB","team":"NYJ","avg":164.0,"n":1},{"name":"Emmett Johnson","pos":"RB","team":"KC","avg":166.0,"n":1},{"name":"Tre Tucker","pos":"WR","team":"LV","avg":168.0,"n":1}]}};
+let S_rndActive="1";
+function drawRounds(){
+  const tabsEl=$('rndTabs');
+  tabsEl.innerHTML='';
+  for(let r=1;r<=13;r++){
+    const key=String(r);
+    const b=document.createElement('button');
+    b.className='subtab'+(key===S_rndActive?' on':'');
+    b.textContent='R'+r;
+    b.onclick=()=>{S_rndActive=key;drawRounds();};
+    tabsEl.appendChild(b);
+  }
+  const range=ROUNDS_DATA.ranges[S_rndActive];
+  const players=ROUNDS_DATA.rounds[S_rndActive]||[];
+  $('rndRange').textContent=`My picks ${range[0]}–${range[1]} · ${players.length} players`;
+  $('rndList').innerHTML=players.length?players.map((p,i)=>`
+    <div class="adpr">
+      <div class="ar">${i+1}</div>
+      <div><div class="an">${p.name}</div>
+        <div class="am"><span class="pos ${p.pos}" style="margin-right:5px">${p.pos}</span>${p.team} · seen ${p.n}/8</div></div>
+      <div class="ad">${p.avg.toFixed(1)}</div>
+    </div>`).join(''):'<p class="hint">No players from this list land in this round.</p>';
+}
+
+function drawSheet(){
+  const C=curPick(),N=nextMine();
+  const mine=myPicks();
+  const rows=S.targets.map(p=>{
+    const by=S.picks.find(k=>k.key===p.key);
+    return{...p,gone:!!by,by,s:by?0:(N?survive(p,C,N,true):0)};
+  }).sort((a,b)=>a.gone-b.gone||a.s-b.s||a.adp-b.adp);
+  const extra=p=>{
+    if(p.gone)return'';
+    const chips=mine.filter(m=>m>=C).slice(0,5).map(m=>{
+      const v=survive(p,C,m,true);
+      return `<span class="chip">${fmt(m)} <b style="color:${color(v)}">${pct(v)}%</b></span>`;}).join('');
+    const raw=N?survive(p,C,N,false):0, d=Math.round((p.s-raw)*100);
+    const later=mine.filter(m=>m>N)[0], l=later?survive(p,C,later,true):0;
+    const v = p.s>=.85?'Safe. He should still be sitting there.'
+      : p.s>=.55?'Leaning yours, but not free. Fine to wait if the board gives you someone better.'
+      : p.s>=.25?`Real risk — and only ${pct(l)}% he makes it to ${later?fmt(later):'the pick after'}.`
+      : 'Take him now or lose him.';
+    return `<div class="qsx2"><div class="chips">${chips}</div>
+      <div class="delta" style="text-align:left;color:${d<0?'var(--gone)':d>0?'var(--safe)':'var(--mute)'}">${d>0?'+':''}${d} vs rankings alone</div>
+      <div class="verdict">${v}</div></div>`;
+  };
+  $('qsList').innerHTML=rows.length?rows.map((p,i)=>`
+    <div class="qs ${p.gone?'out':''} ${!p.gone&&p.s<.35?'urgent':''}">
+      <div class="qrk">${i+1}</div>
+      <div><div class="qn"><span class="star">&#9733;</span>${p.name}</div>
+        <div class="qm">${p.pos||''}${p.team?' · '+p.team:''} · ECR ${p.adp}${
+          p.gone?` · gone at ${fmt(p.by.no)}`:` · there at ${N?fmt(N):'—'}`}</div></div>
+      ${gauge(p.s,p.gone)}
+      <button class="qsx" data-k="${p.key}" title="Remove">&#10005;</button>
+      ${extra(p)}
+    </div>`).join('')
+    :'<div class="empty">Nothing on your sheet yet. Add the guys you actually want.</div>';
+  document.querySelectorAll('#qsList .qsx').forEach(b=>b.onclick=()=>{
+    S.targets=S.targets.filter(x=>x.key!==b.dataset.k);saveSheet();render();});
+}
+/* widen the board over the roster column */
+function setWide(on){
+  document.body.classList.toggle('wideboard',on);
+  const b=$('wideBtn');
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-pressed',on?'true':'false');
+  b.title=on?'Give the roster column back':'Widen the board across the roster column';
+  if(on)setTabR('board');
+  // two frames: one for the column change, one for the grid to re-measure
+  drawGrid();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>pinToNow(false,true)));
+}
+/* pin the cell that is on the clock to the centre of the grid, both axes */
+function pinToNow(smooth,force){
+  const w=$('gridwrap');if(!w)return;
+  const c=w.querySelector('.gc.now')||w.querySelector('.gc.me');
+  if(!c)return;
+  const pad=60;
+  const cx=c.offsetLeft, cy=c.offsetTop;
+  const outX=cx<w.scrollLeft+pad||cx+c.offsetWidth>w.scrollLeft+w.clientWidth-pad;
+  const outY=cy<w.scrollTop+pad||cy+c.offsetHeight>w.scrollTop+w.clientHeight-pad;
+  if(!force&&!outX&&!outY)return;              // already on screen — leave the view alone
+  const clamp=(v,m)=>Math.max(0,Math.min(m,v));
+  const left=(force||outX)?clamp(cx-w.clientWidth/2+c.offsetWidth/2,w.scrollWidth-w.clientWidth)
+                          :w.scrollLeft;
+  const top =(force||outY)?clamp(cy-w.clientHeight/2+c.offsetHeight/2,w.scrollHeight-w.clientHeight)
+                          :w.scrollTop;
+  S._auto=true;
+  w.scrollTo({left,top,behavior:smooth?'smooth':'auto'});
+  clearTimeout(S._autoT);S._autoT=setTimeout(()=>{S._auto=false;},900);
+}
+$('wideBtn').onclick=()=>setWide(!document.body.classList.contains('wideboard'));
+$('followBtn').onclick=()=>setFollow(!S.follow);
+$('jumpNow').onclick=()=>pinToNow(true,true);
+/* only a real gesture drops you out of follow — the smooth auto-scroll fires scroll
+   events of its own, which used to switch following off a moment after it turned on */
+['wheel','touchstart','pointerdown','keydown'].forEach(ev=>
+  $('gridwrap').addEventListener(ev,()=>{ if(S.follow)setFollow(false); },{passive:true}));
+
+/* ============ pick logging ============ */
+function addPick(name,pos,team){
+  const k=norm(name),hit=BYKEY[k];
+  const p={name:hit?hit.name:name,pos:pos||(hit?hit.pos:''),team:team||(hit?hit.team:''),no:curPick(),key:k};
+  S.picks.push(p); queueHit(p);
+}
+/* success animation when a logged pick is MY pick and he was in my queue */
+function queueHit(p){
+  if(!p||typeof successFlash!=='function')return;
+  if(!S.targets.some(t=>t.key===p.key))return;
+  if(!myPicks().includes(p.no))return;
+  successFlash(p.name);
+}
+$('manTake').onclick=()=>{
+  const v=$('manName').value.trim();if(!v)return;
+  const k=norm(v),hit=BYKEY[k]||POOL.map(p=>BYKEY[norm(p[1])]).find(p=>norm(p.name).startsWith(k));
+  if(!hit&&!confirm(`"${v}" is not in the top 260. Log him anyway?`))return;
+  addPick(hit?hit.name:v,hit?hit.pos:'',hit?hit.team:'');
+  $('manName').value='';$('sugg').innerHTML='';render();
+};
+$('manUndo').onclick=()=>{S.picks.pop();render();};
+$('manName').addEventListener('input',e=>{
+  const q=norm(e.target.value);
+  if(q.length<2){$('sugg').innerHTML='';return;}
+  const hits=POOL.filter(p=>norm(p[1]).includes(q)&&!S.picks.some(k=>k.key===norm(p[1]))).slice(0,6);
+  $('sugg').innerHTML=hits.map(p=>`<button class="chip" style="margin:4px 4px 0 0;cursor:pointer"
+    data-n="${p[1]}">${p[1]} <b style="color:var(--mute)">${p[2]} ${p[3]} #${p[0]}</b></button>`).join('');
+  document.querySelectorAll('#sugg button').forEach(b=>b.onclick=()=>{
+    $('manName').value=b.dataset.n;$('manTake').click();});
+});
+$('manName').addEventListener('keydown',e=>{if(e.key==='Enter')$('manTake').click();});
+
+/* ============ sleeper ============ */
+const msg=(el,t,good)=>$(el).innerHTML=`<div class="${good?'ok':'err'}">${t}</div>`;
+async function connect(){
+  const m=($('did').value||'').trim().match(/(\d{10,25})/);
+  S.draftId=m?m[1]:DRAFT_ID;
+  $('did').value=$('did2').value=S.draftId?('https://sleeper.com/draft/nfl/'+S.draftId):'';
+  if(!S.draftId){msg('conmsg','Paste the Sleeper draft URL and I will pull the ID out of it.');return;}
+  try{
+    const r=await fetch(`https://api.sleeper.app/v1/draft/${S.draftId}`);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.settings){if(d.settings.teams){S.teams=d.settings.teams;$('teams').value=S.teams;}
+      if(d.settings.rounds){S.rounds=d.settings.rounds;$('rounds').value=S.rounds;}}
+    await loadTeams();
+    msg('conmsg',`Connected \u2014 ${S.teams} teams, ${S.rounds} rounds. Live.`,true);
+    S.live=true;$('dot').classList.add('on');$('syncCard').classList.remove('on');$('stat').textContent='Live';
+    $('syncBtn').classList.add('live');$('syncBtn').textContent='Live \u00b7 synced';
+    S.fails=0;poll();schedule(0);render();
+  }catch(e){S.live=false;$('dot').classList.remove('on');$('stat').textContent='Manual mode';
+    $('syncBtn').classList.remove('live');$('syncBtn').textContent='Sync league';
+    msg('conmsg',`Sleeper did not answer (${e.message}). Keep logging picks by hand \u2014 every number works the same.`);}
+}
+/* how long until the next poll: fast when the board is moving toward you */
+function pollGap(){
+  if(document.hidden)return 15000;              // tab in the background — stay cheap
+  if(S.fails>0)return Math.min(15000,1500*Math.pow(2,S.fails)); // backoff on errors
+  const C=curPick(),N=nextMine();
+  if(N&&N-C<=3)return 800;                      // your pick is nearly up — near-instant
+  return 1500;
+}
+function schedule(gap){
+  clearTimeout(S.timer);
+  if(!S.live||!S.draftId)return;
+  S.timer=setTimeout(()=>poll().finally(()=>schedule()),gap===0?0:(gap||pollGap()));
+}
+async function poll(){
+  if(!S.draftId||S.busy)return;
+  S.busy=true;
+  try{
+    const r=await fetch(`https://api.sleeper.app/v1/draft/${S.draftId}/picks?t=${Date.now()}`,
+                        {cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    S.fails=0;
+    if(d.length===S.picks.length)return;
+    const seen=new Set(S.picks.map(p=>p.no));
+    S.picks=d.sort((a,b)=>a.pick_no-b.pick_no).map(p=>{const mt=p.metadata||{};
+      const nm=((mt.first_name||'')+' '+(mt.last_name||'')).trim()||('Pick '+p.pick_no);
+      return{name:nm,pos:(mt.position||'').toUpperCase().replace('DST','DEF'),
+             team:(mt.team||'').toUpperCase(),no:p.pick_no,key:norm(nm)};});
+    S.picks.filter(p=>!seen.has(p.no)).forEach(queueHit);
+    $('stat').textContent=`Live · ${S.picks.length} picks in`;render();
+  }catch(e){S.fails++;$('stat').textContent='Sleeper unreachable — retrying';}
+  finally{S.busy=false;}
+}
+/* wake up the instant the tab comes back or the window regains focus */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.live)schedule(0);});
+addEventListener('focus',()=>{if(S.live)schedule(0);});
+
+/* ============ targets ============ */
+function mkTarget(name,pos,adp,team,tier){
+  const hit=BYKEY[norm(name)];
+  return{name:hit?hit.name:name,pos:pos||(hit?hit.pos:'WR'),adp:adp||(hit?hit.rk:150),
+         team:team||(hit?hit.team:''),tier:tier||(hit?hit.tier:0),key:norm(name)};
+}
+$('add').onclick=()=>{
+  const lines=$('raw').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let n=0,miss=[];
+  lines.forEach(l=>{
+    const f=l.split(/\t|,/).map(x=>x.trim()).filter(Boolean);
+    const name=f[0],hit=BYKEY[norm(name)];
+    const pos=f.find(x=>/^(QB|RB|WR|TE|K|DEF|DST)$/i.test(x)),adp=f.map(parseFloat).find(x=>!isNaN(x));
+    if(!hit&&!adp){miss.push(name);return;}
+    if(S.targets.some(t=>t.key===norm(name)))return;
+    S.targets.push(mkTarget(name,pos&&pos.toUpperCase(),adp));n++;});
+  $('raw').value='';
+  msg('loadmsg',n?`Added ${n}.`+(miss.length?` Skipped (not in top 260, give me a position and ADP): ${miss.join(', ')}`:''):
+    `Nothing added.${miss.length?' Not found: '+miss.join(', '):''}`,n>0);
+  render();
+};
+$('reset').onclick=()=>{if(confirm('Clear every logged pick? Targets stay.')){S.picks=[];render();}};
+$('connect').onclick=connect;
+$('connect2').onclick=()=>{
+  $('did').value=$('did2').value;
+  connect().then(()=>{$('conmsg2').innerHTML=$('conmsg').innerHTML;});
+};
+$('did').addEventListener('keydown',e=>{if(e.key==='Enter')connect();});
+$('did2').addEventListener('keydown',e=>{if(e.key==='Enter')$('connect2').click();});
+$('syncBtn').onclick=e=>{
+  e.stopPropagation();
+  const c=$('syncCard'),open=c.classList.toggle('on');
+  if(open)setTimeout(()=>$('did').focus(),60);
+};
+document.addEventListener('click',e=>{
+  const c=$('syncCard');
+  if(c.classList.contains('on')&&!c.contains(e.target)&&e.target!==$('syncBtn'))c.classList.remove('on');
+});
+['slot','teams','rounds'].forEach(id=>$(id).oninput=()=>{S[id]=Math.max(1,parseInt($(id).value)||1);render();});
+$('spread').oninput=()=>{S.spread=+$('spread').value/100;$('spreadO').textContent='.'+$('spread').value;render();};
+$('needw').oninput=()=>{S.needw=+$('needw').value/100;$('needwO').textContent=S.needw.toFixed(2);render();};
+
+/* ============ persistence ============ */
+async function save(){try{await window.storage.set('ffdraft:v2',JSON.stringify({
+  draftId:S.draftId,slot:S.slot,teams:S.teams,rounds:S.rounds,spread:S.spread,needw:S.needw,
+  targets:S.targets,picks:S.picks}));}catch(e){}}
+async function load(){
+  try{const r=await window.storage.get('ffdraft:v2');
+    if(r){const d=JSON.parse(r.value);Object.assign(S,d);
+      $('did').value=S.draftId||'';$('slot').value=S.slot;$('teams').value=S.teams;$('rounds').value=S.rounds;
+      $('spread').value=Math.round(S.spread*100);$('spreadO').textContent='.'+Math.round(S.spread*100);
+      $('needw').value=Math.round(S.needw*100);$('needwO').textContent=S.needw.toFixed(2);}
+  }catch(e){}
+  if(!S.targets||!S.targets.length)
+    S.targets=PRELOAD.map(p=>mkTarget(p[1],p[2],p[0],p[3],p[4]));
+  loadSheet();
+  ['Colston Loveland','Justin Jefferson','J.K. Dobbins','Jordan Mason','Saquon Barkley','James Cook III']
+    .forEach(n=>{if(!S.targets.some(t=>t.key===norm(n)))S.targets.push(mkTarget(n));});
+  saveSheet();
+  if(!$('did').value)$('did').value=DRAFT_URL;
+  $('did2').value=$('did').value;
+  connect();
+}
+load().then(render);
+</script>
+
+<div id="fx" aria-hidden="true">
+  <div>
+    <svg id="fxsvg" viewBox="0 0 240 240">
+      <circle class="halo" id="fxhalo" cx="120" cy="120" r="62"></circle>
+      <circle class="core" cx="120" cy="120" r="60"></circle>
+      <circle class="ring" id="fxring" cx="120" cy="120" r="60" stroke-dasharray="377" stroke-dashoffset="377"></circle>
+      <path class="tick" id="fxtick" d="M92 122 L112 143 L152 99" stroke-dasharray="92" stroke-dashoffset="92"></path>
+    </svg>
+    <div id="fxname"><small>Locked in &#8212; he is yours</small><span id="fxwho"></span></div>
+  </div>
+</div>
+<div id="fxlive" role="status" aria-live="polite" style="position:fixed;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+<script>
+/* ============ success flash on a queue pick ============ */
+(function(){
+  "use strict";
+  var reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var fx=document.getElementById('fx'),svg=document.getElementById('fxsvg'),
+      ring=document.getElementById('fxring'),tick=document.getElementById('fxtick'),
+      halo=document.getElementById('fxhalo'),who=document.getElementById('fxwho'),
+      live=document.getElementById('fxlive');
+  var RING=377,TICK=92,DUR=1180,HOLD=700,raf=0,hideT=0;
+  function set(el,o){el.style.strokeDashoffset=o;}
+  function spring(t){return t>=1?1:1+Math.pow(2,-7*t)*Math.sin((t*7-0.18)*(Math.PI*2))*0.42;}
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+  function hide(){fx.classList.remove('on');cancelAnimationFrame(raf);clearTimeout(hideT);}
+  window.successFlash=function(name){
+    cancelAnimationFrame(raf);clearTimeout(hideT);
+    who.textContent=name||'';
+    live.textContent=(name||'Player')+' is yours';
+    fx.classList.add('on');
+    if(reduce){set(ring,0);set(tick,0);svg.style.transform='scale(1)';halo.style.opacity=0;
+      hideT=setTimeout(hide,1400);return;}
+    set(ring,RING);set(tick,TICK);halo.style.opacity=0;
+    var t0=performance.now();
+    (function frame(now){
+      if(document.hidden){hide();return;}
+      var ms=Math.min(DUR,now-t0);
+      set(ring,RING*(1-(ms<520?easeOut(ms/520):1)));
+      svg.style.transform='scale('+spring(Math.min(1,ms/620)).toFixed(4)+')';
+      set(tick,TICK*(1-(ms<360?0:ms>760?1:easeOut((ms-360)/400))));
+      if(ms>620){var h=(ms-620)/(DUR-620);
+        halo.style.opacity=(0.5*(1-h)).toFixed(3);
+        halo.style.transform='scale('+(1+h*0.9).toFixed(3)+')';}
+      else halo.style.opacity=0;
+      if(ms<DUR)raf=requestAnimationFrame(frame);
+      else{halo.style.opacity=0;hideT=setTimeout(hide,HOLD);}
+    })(t0);
+  };
+  document.addEventListener('visibilitychange',function(){if(document.hidden)hide();});
+})();
+</script>
+
+<div id="wm" aria-hidden="true"><div id="wmin">
+  <div id="wmword"></div>
+  <div id="wmsub">You are on the clock</div>
+</div></div>
+<script>
+/* ============ 15-second warning (weight morph wave) ============ */
+(function(){
+  "use strict";
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var wm=document.getElementById('wm'),host=document.getElementById('wmword');
+  var text="15 SECONDS",spans=[];
+  for(var i=0;i<text.length;i++){
+    var el=document.createElement('span');
+    el.textContent=text[i]===' '?'\u00a0':text[i];
+    host.appendChild(el);spans.push(el);
+  }
+  var t=0,raf=0,lastW=[],lastHue=[],endAt=0;
+  function frame(){
+    t+=0.045;
+    for(var i=0;i<spans.length;i++){
+      var p=Math.sin(t-i*0.6);
+      var wr=Math.round((200+(p*0.5+0.5)*700)/25)*25;
+      var sc=0.9+(p*0.5+0.5)*0.35;
+      var hue=Math.round(38+p*14);            // amber, not cyan — this is a warning
+      if(wr!==lastW[i]){spans[i].style.fontWeight=wr;lastW[i]=wr;}
+      spans[i].style.transform='scaleY('+sc.toFixed(3)+')';
+      if(hue!==lastHue[i]){spans[i].style.color='hsl('+hue+',95%,62%)';lastHue[i]=hue;}
+    }
+    if(performance.now()<endAt)raf=requestAnimationFrame(frame);
+    else{raf=0;hide();}
+  }
+  function hide(){wm.classList.remove('on');cancelAnimationFrame(raf);raf=0;}
+  window.warn15=function(){
+    wm.classList.add('on');
+    if(reduce){spans.forEach(function(el){el.style.fontWeight=700;el.style.color='#f0b44a';});
+      setTimeout(hide,3200);return;}
+    endAt=performance.now()+3200;
+    if(!raf)raf=requestAnimationFrame(frame);
+  };
+  document.addEventListener('visibilitychange',function(){if(document.hidden)hide();});
+})();
+</script>
+
+<div id="ypflash" aria-hidden="true"><div>
+  <div id="ypword"></div>
+  <div id="ypsub">You're on the clock</div>
+</div></div>
+<script>
+/* ============ "your pick" flash — travelling weight-wave ============ */
+(function(){
+  "use strict";
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var yp=document.getElementById('ypflash'),host=document.getElementById('ypword');
+  var TEXT="YOUR PICK",letters=[];
+  for(var i=0;i<TEXT.length;i++){
+    var el=document.createElement('span');
+    if(TEXT[i]===' '){el.className='ysp';}
+    else{el.className='yl';el.textContent=TEXT[i];}
+    host.appendChild(el);letters.push(el);
+  }
+  var N=letters.length;
+  var MIN=130,MAX=860,SPREAD=1.05,SPEED=2.6;
+  function bell(x){return Math.exp(-(x*x)/(2*0.62*0.62));}
+  var raf=0,t0=0,endAt=0,hideT=null,running=false;
+  function frame(now){
+    var t=(now-t0)/1000;
+    var crest=((t*SPEED)%(N+2.4))-1.2;
+    for(var i=0;i<N;i++){
+      var L=letters[i];
+      if(L.className!=='yl')continue;
+      var d=i-crest,b=bell(d*SPREAD),w=MIN+(MAX-MIN)*b;
+      L.style.fontVariationSettings='"wght" '+(w|0);
+      var lift=-b*0.09,sc=1+b*0.05;
+      L.style.transform='translateY('+lift.toFixed(3)+'em) scale('+sc.toFixed(3)+')';
+      var g=b*b;
+      L.style.color='rgb('+(238+(245-238)*g|0)+','+(240-(240-180)*g|0)+','+(246-(246-74)*g|0)+')';
+      L.style.textShadow='0 0 '+(10+22*g).toFixed(0)+'px rgba(240,180,74,'+(0.5*g).toFixed(3)+')';
+    }
+    if(now<endAt)raf=requestAnimationFrame(frame);
+    else{raf=0;hide();}
+  }
+  function hide(){yp.classList.remove('on');cancelAnimationFrame(raf);raf=0;running=false;clearTimeout(hideT);}
+  window.flashYourPick=function(){
+    yp.classList.add('on');
+    if(reduce){setTimeout(hide,2600);return;}
+    running=true;t0=performance.now();endAt=t0+2600;
+    if(!raf)raf=requestAnimationFrame(frame);
+  };
+  document.addEventListener('visibilitychange',function(){if(document.hidden)hide();});
+})();
+</script>
+
+<script>
+(function(){"use strict";
+  var reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var sp=document.getElementById('splash'),btn=document.getElementById('enterBtn'),timer=null;
+  document.body.classList.add('gated');
+  function squish(){btn.classList.remove('is-squish');void btn.offsetWidth;btn.classList.add('is-squish');}
+  btn.addEventListener('animationend',function(){btn.classList.remove('is-squish');});
+  function stop(){clearTimeout(timer);}
+  var PH=[['#ff4d4d','#8f2b2b','#ff4d4d'],
+          ['#ff8c2b','#8a4a12','#ff8c2b'],
+          ['#ffd23f','#8a7418','#ffd23f'],
+          ['#2fd67f','#1a6b41','#2fd67f']];
+  btn.addEventListener('click',function(){
+    stop();squish();
+    var ld=document.getElementById('loader'),ring=ld.querySelector('.c14-orange'),
+        lab=document.getElementById('loadlab');
+    setTimeout(function(){
+      sp.classList.add('loading');
+      var i=0,step=reduce?120:560;
+      (function phase(){
+        var c=PH[i];
+        ring.style.setProperty('--peel',c[0]);
+        ring.style.setProperty('--seg1',c[1]);
+        ring.style.setProperty('--seg2',c[2]);
+        lab.style.color=c[0];
+        if(++i<PH.length)return setTimeout(phase,step);
+        setTimeout(function(){
+          document.body.classList.remove('gated');
+          document.body.classList.add('entered');
+          if(window.startStars)window.startStars();
+          sp.classList.add('gone');
+          setTimeout(function(){sp.remove();dispatchEvent(new Event('resize'));},400);
+        },step);
+      })();
+    },reduce?0:260);
+  });
+})();
+</script>
+<script>
+(function(){
+  const cv=document.getElementById('c2-stars')||document.getElementById('stars');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,DPR,raf=0,started=false;
+  const N=115,stars=[],cols=['#ffffff','#bcd4ff','#fff0c8','#ffd0d8'];
+  function seed(){stars.length=0;
+    for(let i=0;i<N;i++)stars.push({x:Math.random(),y:Math.random(),
+      r:0.4+Math.random()*1.7,ph:Math.random()*Math.PI*2,
+      sp:0.5+Math.random()*1.6,c:cols[(Math.random()*cols.length)|0]});}
+  function size(){DPR=Math.min(devicePixelRatio||1,2);
+    W=cv.clientWidth;H=cv.clientHeight;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+  addEventListener('resize',size);
+  let t=0,px=0.5,py=0.5;
+  addEventListener('pointermove',e=>{px=e.clientX/innerWidth;py=e.clientY/innerHeight;});
+  function frame(){
+    t+=reduce?0:0.03;
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      const tw=reduce?0.7:0.5+0.5*Math.sin(t*s.sp+s.ph);
+      const dx=s.x-px,dy=s.y-py,near=1-Math.min(1,Math.hypot(dx,dy)*2);
+      const a=0.25+tw*0.7+near*0.3, rr=s.r*(0.7+tw*0.6+near*0.5);
+      ctx.globalAlpha=Math.min(1,a)*0.85;ctx.fillStyle=s.c;
+      ctx.beginPath();ctx.arc(s.x*W,s.y*H,rr,0,Math.PI*2);ctx.fill();
+      if(rr>1.6){ctx.globalAlpha=Math.min(1,a)*0.4;ctx.strokeStyle=s.c;ctx.lineWidth=0.6;
+        ctx.beginPath();ctx.moveTo(s.x*W-rr*2.4,s.y*H);ctx.lineTo(s.x*W+rr*2.4,s.y*H);
+        ctx.moveTo(s.x*W,s.y*H-rr*2.4);ctx.lineTo(s.x*W,s.y*H+rr*2.4);ctx.stroke();}
+    });
+    ctx.globalAlpha=1;
+    raf=reduce?0:requestAnimationFrame(frame);
+  }
+  function go(){if(!raf&&started)raf=requestAnimationFrame(frame);}
+  function halt(){cancelAnimationFrame(raf);raf=0;}
+  document.addEventListener('visibilitychange',()=>{document.hidden?halt():go();});
+  window.startStars=function(){if(started)return;started=true;size();seed();reduce?frame():go();};
+})();
+</script>
+
+<script>
+/* ============ pick alert sound (opening bell) ============ */
+(function(){
+  "use strict";
+  var SRC="data:audio/mpeg;base64,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";
+  window.playPickSound=function(){
+    try{
+      var a=new Audio(SRC);
+      a.volume=0.85;
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){/* blocked until user interacts with page */});
+    }catch(e){}
+  };
+})();
+</script>
